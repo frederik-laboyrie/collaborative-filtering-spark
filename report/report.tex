@@ -4,14 +4,17 @@
 \section*{Multiresolution Convolutional Neural Network Architectures for Hand Orientation Inference}
 
 \subsection*{Introduction}
+In this work an efficient convolutional neural network (CNN)
+architecture will be developed which is capable of inferring hand orientation through regression on uncalibrated 2D monocular images.
 
 \subsection*{Memory Overhead Management}
+MobileNets [1] train using factorized convolutions which allow the use of model shrinking hyperparameters during training. Note that this approach is separate from compressing networks after training. The factorized convolutions are based of depthwise separable convolutions which are of course not unique to MobileNets [1] and were famously used in Xception [2]
 
 \subsection*{References}
 \begin{enumerate}
-\item Howard, A. G., Zhu, M., Chen, B., Kalenichenko, D., Wang, W., Weyand, T., ... \& Adam, H. (2017). Mobilenets: Efficient convolutional neural networks for mobile vision applications. \emph{arXiv preprint arXiv:1704.04861}.
+\item Howard, A. G., Zhu, M., Chen, B., Kalenichenko, D., Wang, W., Weyand, T., ... \& Adam, H. (2017). MobileNets: Efficient convolutional neural networks for mobile vision applications. \emph{arXiv preprint arXiv:1704.04861}.
+\item Chollet, F. (2016). Xception: Deep Learning with Depthwise Separable Convolutions. \emph{arXiv preprint arXiv:1610.02357}.
+Chicago	
 \end{enumerate}
-
-
 
 \end{document}
