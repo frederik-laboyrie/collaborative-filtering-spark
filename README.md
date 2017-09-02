@@ -1,4 +1,4 @@
-# Hand orientation inference
+## Hand orientation inference
 **Project summary**  
 Experiments with multiresolution CNN architectures for hand orientation inference  
 
