@@ -4,7 +4,7 @@ from keras.layers.normalization import BatchNormalization
 from keras.layers.advanced_activations import LeakyReLU
 from keras.models import Sequential
 
-def multires_CNN():
+def multires_CNN(filters, kernel_size, multires_data):
     '''multires data is output
        from load_standardized_multires()
     '''
