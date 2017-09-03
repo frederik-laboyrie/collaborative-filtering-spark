@@ -1,43 +1,40 @@
-from keras.layers import Dense, Flatten
-from keras.layers import Conv2D, MaxPooling2D, AveragePooling2D, Dropout, Merge
+from keras.layers import Conv2D, MaxPooling2D, AveragePooling2D, Dropout, Flatten, Dense, Input
+from keras.layers.merge import concatenate
 from keras.layers.normalization import BatchNormalization
 from keras.layers.advanced_activations import LeakyReLU
-from keras.models import Sequential
+from keras.models import Model
 
 def multires_CNN(filters, kernel_size, multires_data):
-    '''multires data is output
-       from load_standardized_multires()
+    '''uses Functional API for Keras 2.x support.
+       multires data is output from load_standardized_multires()
     '''
-    fullres_branch = Sequential()
-    fullres_branch.add(Conv2D(filters, (kernel_size, kernel_size), 
-                     input_shape = multires_data[0].shape[1:],
-                     activation = LeakyReLU()))
-    fullres_branch.add(MaxPooling2D(pool_size = (2,2)))
-    fullres_branch.add(BatchNormalization())
-    fullres_branch.add(Flatten())
+    input_fullres = Input(multires_data[0].shape[1:], name = 'input_fullres')
+    fullres_branch = Conv2D(filters, (kernel_size, kernel_size),
+                     activation = LeakyReLU())(input_fullres)
+    fullres_branch = MaxPooling2D(pool_size = (2,2))(fullres_branch)
+    fullres_branch = BatchNormalization()(fullres_branch)
+    fullres_branch = Flatten()(fullres_branch)
 
-    medres_branch = Sequential()
-    medres_branch.add(Conv2D(filters, (kernel_size, kernel_size), 
-                     input_shape = multires_data[1].shape[1:],
-                     activation = LeakyReLU()))
-    medres_branch.add(MaxPooling2D(pool_size = (2,2)))
-    medres_branch.add(BatchNormalization())
-    medres_branch.add(Flatten())
+    input_medres = Input(multires_data[1].shape[1:], name = 'input_medres')
+    medres_branch = Conv2D(filters, (kernel_size, kernel_size),
+                     activation = LeakyReLU())(input_medres)
+    medres_branch = MaxPooling2D(pool_size = (2,2))(medres_branch)
+    medres_branch = BatchNormalization()(medres_branch)
+    medres_branch = Flatten()(medres_branch)
 
-    lowres_branch = Sequential()
-    lowres_branch.add(Conv2D(filters, (kernel_size, kernel_size), 
-                     input_shape = multires_data[2].shape[1:],
-                     activation = LeakyReLU()))
-    lowres_branch.add(MaxPooling2D(pool_size = (2,2)))
-    lowres_branch.add(BatchNormalization())
-    lowres_branch.add(Flatten())
+    input_lowres = Input(multires_data[1].shape[1:], name = 'input_lowres')
+    lowres_branch = Conv2D(filters, (kernel_size, kernel_size),
+                     activation = LeakyReLU())(input_lowres)
+    lowres_branch = MaxPooling2D(pool_size = (2,2))(lowres_branch)
+    lowres_branch = BatchNormalization()(lowres_branch)
+    lowres_branch = Flatten()(lowres_branch)
 
-    merged_branches = Merge([fullres_branch, medres_branch, lowres_branch], mode='concat')
+    merged_branches = concatenate([fullres_branch, medres_branch, lowres_branch])
+    merged_branches = Dense(128, activation = LeakyReLU())(merged_branches)
+    merged_branches = Dropout(0.5)(merged_branches)
+    merged_branches = Dense(2,activation ='linear')(merged_branches)
 
-    model = Sequential()
-    model.add(merged_branches)
-    model.add(Dense(128, activation = LeakyReLU()))
-    model.add(Dropout(0.5))
-    model.add(Dense(2,activation ='linear'))
+    model = Model(inputs=[input_fullres,input_medres,input_lowres],outputs=[merged_branches])
     model.compile(loss = 'mean_absolute_error', optimizer='adam')
+
     return model
