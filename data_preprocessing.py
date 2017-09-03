@@ -26,7 +26,6 @@ def subsample(data, labels, nb_samples):
 def per_image_standardization(arrays):
     '''only works for 1 call before
        ValueError tf graph > 2gb.
-       make work around to clear graph
     '''
     sess = tf.InteractiveSession()
     standardized_tensors = tf.map_fn(lambda array: 
@@ -55,12 +54,14 @@ def load_data():
     return images, labels
 
 def load_standardized_singleres():
+    '''temporarily subsampling within here
+       as tf graph > 2gb issue workaround
+    '''
     images, labels = load_data()
     images_reshape = reshape(images)
-    #temporary workaround for tf graph memory issue
-    images_ss, labels_ss = images_reshape[:500], labels[:500]
+    images_ss, labels_ss = subsample(images_reshape, labels, 500)
     standardized_images = per_image_standardization(images_ss)
-    return standardized_images, labels
+    return standardized_images, labels_ss
 
 def load_standardized_multires():
     standardized_images, labels = load_standardized_singleres()
