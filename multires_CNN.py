@@ -22,7 +22,7 @@ def multires_CNN(filters, kernel_size, multires_data):
     medres_branch = BatchNormalization()(medres_branch)
     medres_branch = Flatten()(medres_branch)
 
-    input_lowres = Input(multires_data[1].shape[1:], name = 'input_lowres')
+    input_lowres = Input(multires_data[2].shape[1:], name = 'input_lowres')
     lowres_branch = Conv2D(filters, (kernel_size, kernel_size),
                      activation = LeakyReLU())(input_lowres)
     lowres_branch = MaxPooling2D(pool_size = (2,2))(lowres_branch)
