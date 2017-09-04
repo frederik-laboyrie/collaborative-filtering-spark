@@ -4,11 +4,16 @@
 \section*{Multiresolution Convolutional Neural Network Architectures for Hand Orientation Inference}
 
 \subsection*{Introduction}
-In this work an efficient convolutional neural network (CNN)
-architecture will be developed which is capable of inferring hand orientation through regression on uncalibrated 2D monocular images.
+In this work an efficient convolutional neural network (CNN) architecture will be developed which is capable of inferring hand orientation through regression on uncalibrated 2D monocular images.
 
 \subsection*{Memory Overhead Management}
-MobileNets [1] train using factorized convolutions which allow the use of model shrinking hyperparameters during training. Note that this approach is separate from compressing networks after training. The factorized convolutions are based of depthwise separable convolutions which are of course not unique to MobileNets [1] and were famously used in Xception [2]
+MobileNets [1] utilize depthwise separable convolutions which are efficient both in terms of latency  and number of parameters. These are factorized convolutions in wich depthwise convolutions are performed separately on each input channel. These are then followed by 1x1 pointwise convolutions on each feature map and only then are outputs combined.\\ 
+
+By separating these stages computational cost is reduced 8-9x when using 3x3 depthwise separable convolutions as in [1]. [2] notes that separating depthwise and pointwise convolutions also prevents a single convolutional kernel having to map spatial correlations and cross-channel correlations jointly. Depthwise separable convolutions are utilised heavily in very deep architectures focused on achieving state-of-the-art results [2, inception]. MobileNets [1], however, utilise them for their efficiency. \\
+
+MobileNets have a base structure which is then controlled by model-shrinking parameters. One parameter alters the width of each layer in the network uniformly and the other is a resolution multiplier. Note that both of these parameters are only used to parametrise a new structure which must be trained again. They primarily exist to provide ease of use for developers aiming to optimise the cost of their network.\\
+
+The base structure for a MobileNet is a layer of full convolutions followed by depthwise separable convolutions all with ReLU activation functions. Batch normalisation and strided convolution downsampling is performed between each layer. Average pooling is then performed before output is passed to the fully-connected layers.
 
 \subsection*{References}
 \begin{enumerate}
