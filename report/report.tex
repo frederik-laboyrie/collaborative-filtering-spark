@@ -13,13 +13,23 @@ By separating these stages computational cost is reduced 8-9x when using 3x3 dep
 
 MobileNets have a base structure which is then controlled by model-shrinking parameters. One parameter alters the width of each layer in the network uniformly and the other is a resolution multiplier. Note that both of these parameters are only used to parametrise a new structure which must be trained again. They primarily exist to provide ease of use for developers aiming to optimise the cost of their network.\\
 
-The base structure for a MobileNet is a layer of full convolutions followed by depthwise separable convolutions all with ReLU activation functions. Batch normalisation and strided convolution downsampling is performed between each layer. Average pooling is then performed before output is passed to the fully-connected layers.
+The base structure for a MobileNet is a layer of full convolutions followed by depthwise separable convolutions all with ReLU activation functions. Batch normalisation and strided convolution downsampling is performed between each layer. Average pooling is then performed before output is passed to the fully-connected layers.\\
+
+MobileNets provide convenience to developers with model-shrinking parameters and low latency depthwise separable convolutions. However, as in [3], which is very similar in architecture and task to this work, over 80\% of the parameters lay in the fully-connected layers. A large amount of redunancy naturally exists in these parameters and this must be exploited to compress the network further.\\
+
+One technique in doing so is Tensor-Train (TT hereafter) decomposition [4] which was used in [5] in training deep neural networks. In [5] fully-connected layers are replaced with TT-layers which means the weight matrix is expressed in TT-format. A d-dimensional tensor is represented in TT-format if each of its elements can be computed using a product of matrices each representing a dimension. Note that multiple matrices can represent one dimension. These groups of matrices are called cores and a tensor in TT-format can equivalently be expressed as sum of the product of these cores.\\
+
+TT-decompositions of tensors into TT-format greatly reduce the number of parameters as the matrices which make up the cores are restricted in size. Tensors in TT-format can still have linear algebra operations applied to them. However, it is necessary to use the TT-SVD algorithm to take advantage of the TT-format which is where the loss function gradient is computed with respect to the cores rather than with respect to the weight matrix.
 
 \subsection*{References}
 \begin{enumerate}
 \item Howard, A. G., Zhu, M., Chen, B., Kalenichenko, D., Wang, W., Weyand, T., ... \& Adam, H. (2017). MobileNets: Efficient convolutional neural networks for mobile vision applications. \emph{arXiv preprint arXiv:1704.04861}.
 \item Chollet, F. (2016). Xception: Deep Learning with Depthwise Separable Convolutions. \emph{arXiv preprint arXiv:1610.02357}.
 Chicago	
+\item Tompson, J., Stein, M., Lecun, Y. \& Perlin, K., 2014. Real-time continuous pose recovery of human hands using convolutional networks. \emph{ACM Transactions on Graphics (ToG)},33(5), p.169.
+\item Oseledets, I. V. (2011). Tensor-train decomposition. \emph{SIAM Journal on Scientific Computing}, 33(5), 2295-2317.
+Chicago	
+\item Novikov, A., Podoprikhin, D., Osokin, A., \& Vetrov, D. P. (2015). Tensorizing neural networks. \emph{Advances in Neural Information Processing Systems} (pp. 442-450).
 \end{enumerate}
 
 \end{document}
