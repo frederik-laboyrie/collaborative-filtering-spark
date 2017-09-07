@@ -25,6 +25,13 @@ Tensors in TT-format can still have linear algebra operations applied to them wh
 
 TT-rank times Oseledets \& Tyrtyshnikov, 2009
 
+\subsection*{Network Architecture}
+To avoid saturation of gradients in the network, rectified activation units will be used. Standard rectified linear units (ReLU hereafter) reassign all negative values to zero and lets positive values pass unchanged. This makes ReLUs computationally very efficient compared to parametric non-linear activation functions such as a sigmoidal. However, as all negative values are set to 0, large updates can cause gradient not to be able to pass through the ReLU.\\
+
+This problem can cause large parts of the network to die and results in relatively sparse network. This sparsity was often attributed to the state-of-the-art performances of ReLU. However, advances in rectified activation unit design brought forward units which allow negative gradients to pass. An example is LeakyReLU which scales negative values with a large denominator however this denominator can be parametrised to let more gradient through. Randomized leaky rectified units (RRelu) randomize the amount of negative gradient that passes through and in [6] outperformed other rectified activation units due to the additional regularization.\\
+
+[6] also points out that LeakyReLU units which were very leaky, as in they let more gradient through, outperformed less leaky ones which are more common. It is important to note, however, that the difference in performance between different rectified activation units in [6] is very marginal.
+
 \subsection*{References}
 \begin{enumerate}
 \item Howard, A. G., Zhu, M., Chen, B., Kalenichenko, D., Wang, W., Weyand, T., ... \& Adam, H. (2017). MobileNets: Efficient convolutional neural networks for mobile vision applications. \emph{arXiv preprint arXiv:1704.04861}.
