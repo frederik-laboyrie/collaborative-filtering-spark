@@ -23,8 +23,11 @@ TT-decompositions of tensors into TT-format greatly reduce the number of paramet
 
 Tensors in TT-format can still have linear algebra operations applied to them which makes training simpler. This is useful as the naive method of training is very costly. It would involve using stochastic gradient descent on the weight matrix directly and then converting the weight matrix to TT-format with a singular value decomposition algorithm such as the TT-SVD algorithm. With many parameters this can be costly at O(MN) but if the loss function gradient is computed with respect to the cores directly memory cost can be reduced to O(d2 r4 max{M, N}) which is another attractive feature of the TT-layer.[5]\\
 
-TT-rank times Oseledets \& Tyrtyshnikov, 2009
+TT-rank times Oseledets \& Tyrtyshnikov, 2009\\
 
+Another technique to exploit the natural redundancies in weight matrices of fully-connected layers is to hash the weight connections into buckets which will then share parameters during train. This is the technique used in HashedNets [7] which are very effective in compressing network size. That is the test error of networks is much more stable as the compression factor increased as compared to other compression techniques whose test errors are shown to diverge wildly as the compression factor is more than 8x. The test error for HashedNets is only marginally worse than full size even with a compression factor of 64x. [7]\\
+
+Note this compression factor does not improve latency as it is just an efficient way of expressing a large network. The same amount of computation is needed but more weights are shared. This compression factor is useful for very large networks which could consume GPU memory during training [7] but is less relevant to being able to achieve real-time performance on low resource hardware. 
 \subsection*{Network Architecture}
 To avoid saturation of gradients in the network, rectified activation units will be used. Standard rectified linear units (ReLU hereafter) reassign all negative values to zero and lets positive values pass unchanged. This makes ReLUs computationally very efficient compared to parametric non-linear activation functions such as a sigmoidal. However, as all negative values are set to 0, large updates can cause gradient not to be able to pass through the ReLU.\\
 
@@ -41,6 +44,8 @@ Chicago
 \item Oseledets, I. V. (2011). Tensor-train decomposition. \emph{SIAM Journal on Scientific Computing}, 33(5), 2295-2317.
 Chicago	
 \item Novikov, A., Podoprikhin, D., Osokin, A., \& Vetrov, D. P. (2015). Tensorizing neural networks. \emph{Advances in Neural Information Processing Systems} (pp. 442-450).
+\item Xu, B., Wang, N., Chen, T., \& Li, M. (2015). Empirical evaluation of rectified activations in convolutional network. \emph{arXiv preprint arXiv:1505.00853}.
+\item Chen, W., Wilson, J., Tyree, S., Weinberger, K., \& Chen, Y. (2015, June). Compressing neural networks with the hashing trick. \emph{International Conference on Machine Learning} (pp. 2285-2294).
 \end{enumerate}
 
 \end{document}
