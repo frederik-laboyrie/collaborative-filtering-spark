@@ -17,9 +17,13 @@ The base structure for a MobileNet is a layer of full convolutions followed by d
 
 MobileNets provide convenience to developers with model-shrinking parameters and low latency depthwise separable convolutions. However, as in [3], which is very similar in architecture and task to this work, over 80\% of the parameters lay in the fully-connected layers. A large amount of redunancy naturally exists in these parameters and this must be exploited to compress the network further.\\
 
-One technique in doing so is Tensor-Train (TT hereafter) decomposition [4] which was used in [5] in training deep neural networks. In [5] fully-connected layers are replaced with TT-layers which means the weight matrix is expressed in TT-format. A d-dimensional tensor is represented in TT-format if each of its elements can be computed using a product of matrices each representing a dimension. Note that multiple matrices can represent one dimension. These groups of matrices are called cores and a tensor in TT-format can equivalently be expressed as sum of the product of these cores.\\
+One technique in doing so is Tensor-Train (TT hereafter) decomposition [4] which was used in [5] in training deep neural networks. In [5] fully-connected layers are replaced with TT-layers which means the weight matrix is expressed in TT-format. A d-dimensional tensor is represented in TT-format if each of its elements can be computed using a product of matrices each representing a dimension. Note that multiple matrices can represent one dimension. These groups of matrices are called cores and a tensor in TT-format can equivalently be expressed as sum of the product of these cores. \\
 
-TT-decompositions of tensors into TT-format greatly reduce the number of parameters as the matrices which make up the cores are restricted in size. Tensors in TT-format can still have linear algebra operations applied to them. However, it is necessary to use the TT-SVD algorithm to take advantage of the TT-format which is where the loss function gradient is computed with respect to the cores rather than with respect to the weight matrix.
+TT-decompositions of tensors into TT-format greatly reduce the number of parameters as the TT-rank can be specified to be low. The TT-rank is equivalent to how many cores are present in the TT-decomposition. Any tensor can be represented in TT-format with a sufficiently high TT-rank.\\
+
+Tensors in TT-format can still have linear algebra operations applied to them which makes training simpler. This is useful as the naive method of training is very costly. It would involve using stochastic gradient descent on the weight matrix directly and then converting the weight matrix to TT-format with a singular value decomposition algorithm such as the TT-SVD algorithm. With many parameters this can be costly at O(MN) but if the loss function gradient is computed with respect to the cores directly memory cost can be reduced to O(d2 r4 max{M, N}) which is another attractive feature of the TT-layer.[5]\\
+
+TT-rank times Oseledets \& Tyrtyshnikov, 2009
 
 \subsection*{References}
 \begin{enumerate}
