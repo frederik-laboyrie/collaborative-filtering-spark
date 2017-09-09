@@ -12,7 +12,7 @@ def multires_TT_CNN(filters, kernel_size, tt_input_shape,
     input_fullres = Input(multires_data[0].shape[1:], name='input_fullres')
 
     fullres_branch = Conv2D(filters, (kernel_size, kernel_size),
-                            activation = LeakyReLU())(input_fullres)
+                            activation=LeakyReLU())(input_fullres)
     fullres_branch = MaxPooling2D(pool_size=(2, 2))(fullres_branch)
     fullres_branch = BatchNormalization()(fullres_branch)
     fullres_branch = Flatten()(fullres_branch)
