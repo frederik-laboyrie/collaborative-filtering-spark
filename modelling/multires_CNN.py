@@ -17,7 +17,7 @@ def multires_CNN(filters, kernel_size, multires_data):
 
     input_medres = Input(multires_data[1].shape[1:], name = 'input_medres')
     medres_branch = Conv2D(filters, (kernel_size, kernel_size),
-                     activation = LeakyReLU())(input_medres)
+                     activation=LeakyReLU())(input_medres)
     medres_branch = MaxPooling2D(pool_size = (2,2))(medres_branch)
     medres_branch = BatchNormalization()(medres_branch)
     medres_branch = Flatten()(medres_branch)
@@ -30,11 +30,12 @@ def multires_CNN(filters, kernel_size, multires_data):
     lowres_branch = Flatten()(lowres_branch)
 
     merged_branches = concatenate([fullres_branch, medres_branch, lowres_branch])
-    merged_branches = Dense(128, activation = LeakyReLU())(merged_branches)
+    merged_branches = Dense(128, activation=LeakyReLU())(merged_branches)
     merged_branches = Dropout(0.5)(merged_branches)
-    merged_branches = Dense(2,activation ='linear')(merged_branches)
+    merged_branches = Dense(2,activation='linear')(merged_branches)
 
-    model = Model(inputs=[input_fullres,input_medres,input_lowres],outputs=[merged_branches])
-    model.compile(loss = 'mean_absolute_error', optimizer='adam')
+    model = Model(inputs=[input_fullres, input_medres ,input_lowres],
+                  outputs=[merged_branches])
+    model.compile(loss='mean_absolute_error', optimizer='adam')
 
     return model

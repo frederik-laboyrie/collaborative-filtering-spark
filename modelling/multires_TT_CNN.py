@@ -9,26 +9,26 @@ from keras.regularizers import l2
 def multires_TT_CNN(filters, kernel_size, tt_input_shape,
                     tt_output_shape, tt_ranks, multires_data):
 
-    input_fullres = Input(multires_data[0].shape[1:], name='input_fullres')
+    input_fullres_tt = Input(multires_data[0].shape[1:], name='input_fullres_tt')
 
     fullres_branch = Conv2D(filters, (kernel_size, kernel_size),
-                            activation=LeakyReLU())(input_fullres)
+                            activation=LeakyReLU())(input_fullres_tt)
     fullres_branch = MaxPooling2D(pool_size=(2, 2))(fullres_branch)
     fullres_branch = BatchNormalization()(fullres_branch)
     fullres_branch = Flatten()(fullres_branch)
 
-    input_medres = Input(multires_data[1].shape[1:], name='input_medres')
+    input_medres_tt = Input(multires_data[1].shape[1:], name='input_medres_tt')
 
     medres_branch = Conv2D(filters, (kernel_size, kernel_size),
-                           activation=LeakyReLU())(input_medres)
+                           activation=LeakyReLU())(input_medres_tt)
     medres_branch = MaxPooling2D(pool_size=(2, 2))(medres_branch)
     medres_branch = BatchNormalization()(medres_branch)
     medres_branch = Flatten()(medres_branch)
 
-    input_lowres = Input(multires_data[2].shape[1:], name='input_lowres')
+    input_lowres_tt = Input(multires_data[2].shape[1:], name='input_lowres_tt')
 
     lowres_branch = Conv2D(filters, (kernel_size, kernel_size),
-                           activation=LeakyReLU())(input_lowres)
+                           activation=LeakyReLU())(input_lowres_tt)
     lowres_branch = MaxPooling2D(pool_size=(2, 2))(lowres_branch)
     lowres_branch = BatchNormalization()(lowres_branch)
     lowres_branch = Flatten()(lowres_branch)
@@ -52,7 +52,7 @@ def multires_TT_CNN(filters, kernel_size, tt_input_shape,
 
     output_layer = Dense(2, activation='linear')(TT_merged_layer_2)
 
-    model = Model(inputs=[input_fullres, input_medres, input_lowres],
+    model = Model(inputs=[input_fullres_tt, input_medres_tt, input_lowres_tt],
                   outputs=[output_layer])
     model.compile(loss='mean_absolute_error', optimizer='adam')
 
