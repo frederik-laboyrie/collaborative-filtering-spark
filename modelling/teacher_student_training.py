@@ -52,7 +52,7 @@ def get_teacher_student_loss(teacher, student):
     diff = Add()([teacher.output, negativeRight])
     return diff
 
-def compile_full_model(teacher, student):
+def compile_full_model(teacher, student, diff):
     model = Model(inputs=[teacher.input[0], teacher.input[1], teacher.input[2],
                           student.input[0], student.input[1], student.input[2]], 
                   outputs=[diff])
@@ -73,9 +73,9 @@ def main(tt_input_shape, tt_output_shape, tt_ranks):
                           tt_ranks, multires_data)
 
     static_teacher = make_teacher_untrainable(teacher)
-    loss = get_teacher_student_loss(static_teacher, student)
+    diff = get_teacher_student_loss(static_teacher, student)
 
-    model = compile_full_model(static_teacher, student)
+    model = compile_full_model(static_teacher, student, diff)
     model.summary(line_length=150)
 
     print('training student from teacher')
