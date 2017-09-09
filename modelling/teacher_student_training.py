@@ -81,7 +81,7 @@ def main(tt_input_shape, tt_output_shape, tt_ranks):
     print('training student from teacher')
     model.fit([full, med, low, full, med, low], [labels],
                batch_size=1, nb_epoch=10)
-    print(student.evaluate([full, med, low]))
+    print(student.evaluate([full, med, low],labels))
 
 if __name__ == '__main__':
     main(tt_input_shape, tt_output_shape, tt_ranks)
