@@ -17,7 +17,13 @@ The base structure for a MobileNet is a layer of full convolutions followed by d
 
 The utilisation of 1x1 convolutions in MobileNets is not unique to that architecture and are generally popular in model architectures motivated by low latency and model size. SqueezeNets [8] use them not only for the fewer parameters but also to reduce the number of input channels. This is done in Fire modules which replace the convolutional layers. Fire modules have a squeeze layer which consists solely of 1x1 filters, these immediately limit the number of input channels which are passed to the expand layer which consists of 1x1 and 3x3 filters. Fire modules are then much more parameter efficient than standard convolutional layers. This allows SqueezeNets to delay downsampling until later in the network rather than having to downsample each layer with pooling which is shown to increase classification accuracy in [9].\\
 
-SqueezeNets are in fact fully convolutional which further reduces parameters by avoiding the large number of weights which fully-connected layers introduce. Despite this, they are still shown not to lose classification accuracy when model compression techniques such as Deep Compression are applied to them [11]. Many model compression techniques focus on exploiting natural redundancies that occur in fully-connected weight matrices. In [3], which is very similar in architecture and task to this work, over 80\% of the parameters lay in the fully-connected layers but fully-connected layers can of course make up an even larger share of parameters.\\
+SqueezeNets are in fact fully convolutional which further reduces parameters by avoiding the large number of weights which fully-connected layers introduce. Despite this, the model size can still be reduced \emph{considerably} using Deep Compression  [11] and still not lose classification accuracy.\\
+
+Deep Compression is a procedure of several stages which allows compression of models 35-50x without loss of accuracy. This allows extremely large models to still fit on embedded devices. Although the focus is largely on model size, latency can be lowered if the model is reduced enough in size to avoid having to store it in off-chop DRAM memory [11].\\
+
+Pruning is utilised in [11] which is when weights below a certain threshold are simply discarded from the network. This sparse structure is then efficiently stored in compressed sparse row or compressed sparse column format. The weights are then split into clusters which allows the weight matrix to again expressed in a further compressed form as only a table of shared weights needs to be stored, not the individual ones. Finally, Huffman coding is applied to the quantized weights.\\
+
+Other model compression techniques focus solely on exploiting natural redundancies that occur in fully-connected weight matrices. In [3], which is very similar in architecture and task to this work, over 80\% of the parameters lay in the fully-connected layers but fully-connected layers can of course make up an even larger share of parameters.\\
 
 One technique in exploiting these redunancies is Tensor-Train (TT hereafter) decomposition [4] which was used in [5] in training deep neural networks. In [5] fully-connected layers are replaced with TT-layers which means the weight matrix is expressed in TT-format. A d-dimensional tensor is represented in TT-format if each of its elements can be computed using a product of matrices each representing a dimension. Note that multiple matrices can represent one dimension. These groups of matrices are called cores and a tensor in TT-format can equivalently be expressed as sum of the product of these cores. \\
 
@@ -33,6 +39,14 @@ Note this compression factor does not improve latency as it is just an efficient
 
 \subsection*{Learning-Based Network Compression}
 Other compression techniques are learning based and are separate for the more architectural compression techniques previously described. These techniques are generally referred to as knowledge distillation [12]. This technique works by building an objective function based on softmax layer output of a larger network, or several networks, as training labels. The correct labels can also be used in a second objective function but in [12] it was shown that the best accuracy is gained if a very low weight is put on this objective function.\\
+
+The softmax distribution is parametrised using temperature as follows:
+
+\[qi = \frac{exp(z_i/T)}{\sum_j exp(z_j/T)}\]
+
+Typically a high temperature is used which causes a softer distribution where the probabilities are spread over more classes. This is where the benefit of knowledge lies as the softmax layer can store information about similarity between classes that would not be stored in a simple one-hot layer.\\
+
+In [12] this technique is also scaled using ensembles of specialist models on Google's JFT dataset. This dataset has over 15,000 labels showing very clear benefits of training specialist models. In this work, where the specialist models simply train on a specific part of angle-space, there are minimal benefits to training. The labels of the larger, specialised models will just be less accurate than the true labels and do not hold extra information to distill into the smaller networks. Even training on the discriminator model has little benefit as the similarity between classes is known as they are related in known angle-space.
 
 \subsection*{Network Architecture}
 To avoid saturation of gradients in the network, rectified activation units will be used. Standard rectified linear units (ReLU hereafter) reassign all negative values to zero and lets positive values pass unchanged. This makes ReLUs computationally very efficient compared to parametric non-linear activation functions such as a sigmoidal. However, as all negative values are set to 0, large updates can cause gradient not to be able to pass through the ReLU.\\
