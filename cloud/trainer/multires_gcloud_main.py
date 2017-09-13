@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 from data_preprocessing import load_standardized_multires
-from multires_CNN import multires_CNN
+import numpy as np
 import sys
 import argparse
 import pickle  # for handling the new data source
@@ -16,6 +16,13 @@ from keras.models import Model
 from datetime import datetime  # for filename conventions
 
 from tensorflow.python.lib.io import file_io  # for better file I/O
+
+def get_input_shape(data):
+    num_samples = data.shape[0]
+    channels = 3
+    img_rows = data.shape[2]
+    img_cols = data.shape[3]
+    return (num_samples, img_rows, img_cols, channels)
 
 def reshape(data):
     return np.reshape(data, get_input_shape(data))
@@ -84,23 +91,20 @@ def multires_CNN(filters, kernel_size, multires_data):
 
     return model
 
-def train_model(train_file='hand-data/AllImages.npy',
-                train_labels='hand-data/AllLabels.npy',
+def train_model(train_files='hand-data',
                 job_dir='./tmp/test1',**args):
     logs_path = job_dir + '/logs/' + datetime.now().isoformat()
     print('-----------------------')
-    print('Using train_file located at {}'.format(train_file))
+    print('Using train_file located at {}'.format(train_files))
     print('Using logs_path located at {}'.format(logs_path))
     print('-----------------------')
 
-    images = np.load(train_file)
-    labels = np.load(train_labels)
+    images = np.load(train_files+'/AllImages.npy')
+    labels = np.load(train_files+'/AllAngles.npy')
 
     images_reshape = reshape(images)
     images_ss, labels_ss = subsample(images_reshape, labels, 500)
     standardized_images = per_image_standardization(images_ss)
-
-    standardized_images, labels = load_standardized_singleres()
     multires_data = singleres_to_multires(standardized_images)
 
     model = multires_CNN(16, 5, multires_data)
@@ -112,20 +116,17 @@ def train_model(train_file='hand-data/AllImages.npy',
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-
-    parser.add_argument('--train-file',
+    parser.add_argument('--train-files',
                         help='GCS or local paths to training data',
                         required=True)
 
-    parser.add_argument('--train-labels',
-                        help='GCS or local paths to training labels',
-                        required=True)
+    #parser.add_argument('--train-labels',
+    #                    help='GCS or local paths to training labels',
+    #                    required=True)
 
     parser.add_argument('--job-dir',
                         help='GCS location to write checkpoints and export models',
                         required=True)
-
     args = parser.parse_args()
     arguments = args.__dict__
-    
     train_model(**arguments)

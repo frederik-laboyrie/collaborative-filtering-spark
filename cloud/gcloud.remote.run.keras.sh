@@ -11,5 +11,4 @@ gcloud ml-engine jobs submit training $JOB_NAME \
   --region $REGION \
   --config=trainer/cloudml-gpu.yaml \
   -- \
-  --train-file gs://hand-data/AllImages.npy
-  --train-labels gs://hand-data/AllLabels.npy
+  --train-files gs://hand-data
