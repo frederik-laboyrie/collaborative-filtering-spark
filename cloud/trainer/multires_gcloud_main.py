@@ -1,6 +1,7 @@
 from __future__ import print_function
 
-from data_preprocessing import load_standardized_multires
+from StringIO import StringIO
+
 import numpy as np
 import sys
 import argparse
@@ -99,8 +100,17 @@ def train_model(train_files='hand-data',
     print('Using logs_path located at {}'.format(logs_path))
     print('-----------------------')
 
-    images = np.load(train_files+'/AllImages.npy')
-    labels = np.load(train_files+'/AllAngles.npy')
+    imagesio = StringIO(file_io.read_file_to_string(train_files+'/AllImages.npy'))
+    labelsio = StringIO(file_io.read_file_to_string(train_files+'/AllAngles.npy'))
+
+    images = np.load(imagesio)
+    labels_ = np.load(labelsio)
+    labels = labels_[:500]
+
+    #file_stream_images = file_io.FileIO(train_files+'/AllImages.npy', mode='r')
+    #file_stream_labels = file_io.FileIO(train_files+'/AllAngles.npy', mode='r')
+    #images = np.load(file_stream_images)
+    #labels = np.load(file_stream_labels)
 
     images_reshape = reshape(images)
     images_ss, labels_ss = subsample(images_reshape, labels, 500)
@@ -130,3 +140,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     arguments = args.__dict__
     train_model(**arguments)
+
