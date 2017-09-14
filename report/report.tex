@@ -6,6 +6,11 @@
 \subsection*{Introduction}
 In this work an efficient convolutional neural network (CNN) architecture will be developed which is capable of inferring hand orientation through regression on uncalibrated 2D monocular images.
 
+\subsection{Hand Pose and Orientation Inference}
+Building discriminative models for hand pose and orientation inference is a task which typically requires non-standard architectures due to its intricacy. Global and local features are both useful for these tasks. This is noted in [13] where a multiresolution CNN is used on a dataset of RGBD images for real time pose-recovery. A 96x96 image is downsampled 2x and 4x and these images are passed into separate CNNs before their feature maps are flattened, concatenated and passed into fully-connected layers. It would of course be an alternative to use larger filters but this increases learning capacity greatly and makes the model less likely to generalise.\\
+
+In [13] the network is trained to generate 14 18x18 heatmaps which represent the probability of a given joint being in a location. These heatmaps are then combined using the inverse kinematics algorithm to recover the pose of the hand. Note that the training is compartmentalised into 14 separate heatmaps each representing a separate joint, rather than learning the location of all joints individually. These intermediate heatmaps allow the network to focus on local features which increases accuracy. It also allows better recovery of pose if a heatmap fails as the other non-failing heatmaps can be used with a heuristic.\\
+
 \subsection*{Memory Overhead Management}
 MobileNets [1] utilize depthwise separable convolutions which are efficient both in terms of latency  and number of parameters. These are factorized convolutions in wich depthwise convolutions are performed separately on each input channel. These are then followed by 1x1 pointwise convolutions on each feature map and only then are outputs combined.\\ 
 
@@ -72,6 +77,7 @@ Chicago
 \item S. Han, H. Mao, \& W. Dally. Deep compression: Compressing DNNs with pruning, trained
 quantization and huffman coding. \emph{arxiv:1510.00149v3, 2015a}.
 \item Hinton, Geoffrey, Oriol Vinyals, \& Jeff Dean.  (2015). Distilling the knowledge in a neural network. \emph{arXiv preprint arXiv:1503.02531}.
+\item Tompson, J., Stein, M., Lecun, Y., \& Perlin, K. (2014). Real-time continuous pose recovery of human hands using convolutional networks. \emph{ACM Transactions on Graphics (ToG)}, 33(5), 169.
 \end{enumerate}
 
 \end{document}
