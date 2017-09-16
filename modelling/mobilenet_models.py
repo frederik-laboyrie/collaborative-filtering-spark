@@ -10,22 +10,25 @@ from keras.layers.merge import concatenate
 from keras.layers.normalization import BatchNormalization
 from keras.layers.advanced_activations import LeakyReLU
 from keras.models import Model
-from MobileNet.mobilenet_components import _conv_block, _depthwise_conv_block
+from MobileNet.depthwiseconv import DepthwiseConvolution2D
 
-def conv_block3(inputs, filters, alpha, kernel=(3, 3), strides=(1, 1), activation=LeakyReLU()):
-    channel_axis = 1
-    filters = float(filters * alpha)
-    x = Conv2D(filters, kernel,
-               padding='same',
-               use_bias=False,
-               strides=strides,
-               name='conv1')(inputs)
-    x = BatchNormalization(axis=channel_axis, name='conv1_bn')(x)
-    return Activation(relu6, name='conv1_relu')(x)
+def convblock(input, alpha):
+    x = Conv2D(int(32 * alpha), (3, 3), strides=(2, 2), padding='same', use_bias=False)(input)
+    x = BatchNormalization()(x)
+    x = Activation('relu')(x)
+    return x
 
+
+def depthconvblock(input, alpha):
+    x = DepthwiseConvolution2D(int(32 * alpha), (3, 3), strides=(1, 1), padding='same', use_bias=False)(input)
+    x = BatchNormalization()(x)
+    x = Activation('relu')(x)
+    x = Conv2D(int(32 * alpha), (1, 1), strides=(1, 1), padding='same', use_bias=False)(x)
+    x = BatchNormalization()(x)
+    x = Activation('relu')(x)
+    return x
 
 def mobilenet(data, res, alpha,
-              activation,
               include_top,
               dropout=0.25,
               depth_multiplier=1,
@@ -39,14 +42,11 @@ def mobilenet(data, res, alpha,
         input = Input(shape=data.shape[1:])
     else:
         input = data
-    print(activation)
-    print(alpha)
-    x = _conv_block(inputs=input, filters=32, alpha=alpha, strides=(2,2), activation='relu')
-    x = _depthwise_conv_block(x, 64, alpha, depth_multiplier, block_id=1)
-    x = _depthwise_conv_block(x, 64, alpha, depth_multiplier, block_id=2)
-    x = _depthwise_conv_block(x, 128, alpha, depth_multiplier, block_id=2)
+    x = convblock(input, alpha)
+    x = depthconvblock(x, alpha)
+    x = depthconvblock(x, alpha)
+    x = depthconvblock(x, alpha)
     x = GlobalAveragePooling2D()(x)
-    #x = Flatten()(x)
 
     if include_top:
         x = Dropout(dropout)
@@ -58,7 +58,7 @@ def mobilenet(data, res, alpha,
     else:
         return x
 
-def multires_mobilenet(multires_data, activation):
+def multires_mobilenet(multires_data):
     '''uses three mobile nets as configured
        in mobilenet() and concatenates output
        before fully-connected layers
@@ -67,9 +67,9 @@ def multires_mobilenet(multires_data, activation):
     input_medres = Input(multires_data[1].shape[1:], name ='input_medres')
     input_lowres = Input(multires_data[2].shape[1:], name ='input_lowres')
 
-    fullres_mobilenet = mobilenet(input_fullres, 'full', 1, activation, False)
-    medres_mobilenet = mobilenet(input_medres, 'med', 1, activation, False)
-    lowres_mobilenet = mobilenet(input_lowres, 'low', 1, activation, False)
+    fullres_mobilenet = mobilenet(input_fullres, 'full', 1, False)
+    medres_mobilenet = mobilenet(input_medres, 'med', 1, False)
+    lowres_mobilenet = mobilenet(input_lowres, 'low', 1, False)
 
     merged_branches = concatenate([fullres_mobilenet, medres_mobilenet, lowres_mobilenet])
     merged_branches = Dense(128, activation=LeakyReLU())(merged_branches)

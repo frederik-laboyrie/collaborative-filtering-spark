@@ -1,1 +1,1 @@
-from MobileNet.mobilenet_components import *
+from MobileNet.depthwiseconv import *

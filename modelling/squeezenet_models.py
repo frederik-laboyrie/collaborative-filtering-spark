@@ -43,7 +43,7 @@ def fire_module(x, fire_id, leaky, res, squeeze_param=16, expand_param=64):
     x = concatenate([left, right], name=str(s_id) + str(relu_name) + 'concat' + res)
     return x
 
-def squeezenet(data, standalone, leaky, modular, res):
+def squeezenet(data, leaky, exclude_top, res):
     '''squeezenet implementation
        with structure as in original
        paper. note bottleneck replaces
@@ -52,7 +52,7 @@ def squeezenet(data, standalone, leaky, modular, res):
     '''
     bottleneck = 128
 
-    if modular:
+    if exclude_top:
         input = data
     else:
         input = Input(shape=data.shape[1:])
@@ -79,7 +79,7 @@ def squeezenet(data, standalone, leaky, modular, res):
     x = Activation('relu', name='relu_conv10' + res)(x)
     x = GlobalAveragePooling2D()(x)
 
-    if standalone:
+    if exclude_top:
         return x
 
     else:
@@ -94,13 +94,13 @@ def multires_squeezenet(multires_data, leaky):
        and concatenates output into
        small final fully-connected layers.
     '''
-    input_fullres = Input(multires_data[0].shape[1:], name = 'input_fullres')
-    input_medres = Input(multires_data[1].shape[1:], name = 'input_medres')
-    input_lowres = Input(multires_data[2].shape[1:], name = 'input_lowres')
+    input_fullres = Input(multires_data[0].shape[1:], name ='input_fullres')
+    input_medres = Input(multires_data[1].shape[1:], name ='input_medres')
+    input_lowres = Input(multires_data[2].shape[1:], name ='input_lowres')
 
-    fullres_squeezenet = squeezenet(input_fullres, standalone=True, leaky=leaky, modular=True, res='full')
-    medres_squeezenet = squeezenet(input_medres, standalone=True, leaky=leaky, modular=True, res='med')
-    lowres_squeezenet = squeezenet(input_lowres, standalone=True, leaky=leaky, modular=True, res='low')
+    fullres_squeezenet = squeezenet(input_fullres, leaky=leaky, exclude_top=True, res='full')
+    medres_squeezenet = squeezenet(input_medres, leaky=leaky, exclude_top=True, res='med')
+    lowres_squeezenet = squeezenet(input_lowres, leaky=leaky, exclude_top=True, res='low')
 
     merged_branches = concatenate([fullres_squeezenet, medres_squeezenet, lowres_squeezenet])
     merged_branches = Dense(128, activation=LeakyReLU())(merged_branches)

@@ -10,5 +10,5 @@ def main():
 	low = multires_data[2]
 	model.fit([full,med,low],labels, epochs = 10)
 
-if __name__ = '__main__':
+if __name__ == '__main__':
 	main()
