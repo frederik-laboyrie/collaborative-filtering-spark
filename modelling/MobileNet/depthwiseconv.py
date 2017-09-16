@@ -1,3 +1,9 @@
+'''Refik Can Malli's
+   adaption of depthwise conv2d
+   class
+'''
+
+
 from keras import backend as K, initializers, regularizers, constraints
 from keras.backend import image_data_format
 from keras.backend.tensorflow_backend import _preprocess_conv2d_input, _preprocess_padding

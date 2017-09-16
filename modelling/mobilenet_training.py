@@ -6,7 +6,7 @@ import sys
 
 def main():
     multires_data, labels = load_standardized_multires()
-    model = multires_mobilenet(multires_data, LeakyReLU())
+    model = multires_mobilenet(multires_data)
     full = multires_data[0]
     med = multires_data[1]
     low = multires_data[2]
