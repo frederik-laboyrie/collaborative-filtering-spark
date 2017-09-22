@@ -12,7 +12,7 @@ import sys
 
 from keras.preprocessing.image import ImageDataGenerator
 from keras.layers import Conv2D, MaxPooling2D, GlobalAveragePooling2D,\
-                         AveragePooling2D, Dropout, Flatten, Dense, Input,\
+                         AveragePooling2D, Dropout, Flatten, Dense, Input, \
                          Activation
 from keras.layers.merge import concatenate
 from keras.layers.normalization import BatchNormalization
@@ -86,7 +86,7 @@ def fire_module(x, fire_id, leaky, res, squeeze_param=16, expand_param=64):
     x = concatenate([left, right], name=str(s_id) + str(relu_name) + 'concat' + res)
     return x
 
-def squeezenet(data, leaky, exclude_top, res):
+def squeezenet(data, leaky, exclude_top, res, squeeze_param):
     '''squeezenet implementation
        with structure as in original
        paper. note bottleneck replaces
@@ -104,18 +104,18 @@ def squeezenet(data, leaky, exclude_top, res):
     x = Activation(LeakyReLU(), name='relu_conv1' + res)(x)
     x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), name='pool1' + res)(x)
 
-    x = fire_module(x, fire_id=2, leaky=leaky, res=res, squeeze_param=16, expand_param=64)
-    x = fire_module(x, fire_id=3, leaky=leaky, res=res, squeeze_param=16, expand_param=64)
+    x = fire_module(x, fire_id=2, leaky=leaky, res=res, squeeze_param=squeeze_param, expand_param=squeeze_param*4)
+    x = fire_module(x, fire_id=3, leaky=leaky, res=res, squeeze_param=squeeze_param, expand_param=squeeze_param*4)
     x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), name='pool3' + res)(x)
 
-    x = fire_module(x, fire_id=4, leaky=leaky, res=res, squeeze_param=32, expand_param=128)
-    x = fire_module(x, fire_id=5, leaky=leaky, res=res, squeeze_param=32, expand_param=128)
+    x = fire_module(x, fire_id=4, leaky=leaky, res=res, squeeze_param=squeeze_param, expand_param=squeeze_param*4)
+    x = fire_module(x, fire_id=5, leaky=leaky, res=res, squeeze_param=squeeze_param, expand_param=squeeze_param*4)
     x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), name='pool5' + res)(x)
 
-    x = fire_module(x, fire_id=6, leaky=leaky, res=res, squeeze_param=48, expand_param=192)
-    x = fire_module(x, fire_id=7, leaky=leaky, res=res, squeeze_param=48, expand_param=192)
-    x = fire_module(x, fire_id=8, leaky=leaky, res=res, squeeze_param=64, expand_param=256)
-    x = fire_module(x, fire_id=9, leaky=leaky, res=res, squeeze_param=64, expand_param=256)
+    x = fire_module(x, fire_id=6, leaky=leaky, res=res, squeeze_param=squeeze_param, expand_param=squeeze_param*4)
+    x = fire_module(x, fire_id=7, leaky=leaky, res=res, squeeze_param=squeeze_param, expand_param=squeeze_param*4)
+    x = fire_module(x, fire_id=8, leaky=leaky, res=res, squeeze_param=squeeze_param, expand_param=squeeze_param*4)
+    x = fire_module(x, fire_id=9, leaky=leaky, res=res, squeeze_param=squeeze_param, expand_param=squeeze_param*4)
     x = Dropout(0.5, name='drop9' + res)(x)
 
     x = Conv2D(bottleneck, (1, 1), padding='valid', name='conv10' + res)(x)
@@ -132,7 +132,7 @@ def squeezenet(data, leaky, exclude_top, res):
 
         return model
 
-def multires_squeezenet(multires_data, leaky):
+def multires_squeezenet(multires_data, leaky, squeeze_param):
     '''uses three full size squeezenets
        and concatenates output into
        small final fully-connected layers.
@@ -141,9 +141,9 @@ def multires_squeezenet(multires_data, leaky):
     input_medres = Input(multires_data[1].shape[1:], name ='input_medres')
     input_lowres = Input(multires_data[2].shape[1:], name ='input_lowres')
 
-    fullres_squeezenet = squeezenet(input_fullres, leaky=leaky, exclude_top=True, res='full')
-    medres_squeezenet = squeezenet(input_medres, leaky=leaky, exclude_top=True, res='med')
-    lowres_squeezenet = squeezenet(input_lowres, leaky=leaky, exclude_top=True, res='low')
+    fullres_squeezenet = squeezenet(input_fullres, leaky=leaky, exclude_top=True, res='full', squeeze_param)
+    medres_squeezenet = squeezenet(input_medres, leaky=leaky, exclude_top=True, res='med', squeeze_param)
+    lowres_squeezenet = squeezenet(input_lowres, leaky=leaky, exclude_top=True, res='low', squeeze_param)
 
     merged_branches = concatenate([fullres_squeezenet, medres_squeezenet, lowres_squeezenet])
     merged_branches = Dense(128, activation=LeakyReLU())(merged_branches)
@@ -177,9 +177,8 @@ def multiinput_generator(full, med, low, label):
                 break
 
 
-
 def train_model(train_files='hand-data',
-                job_dir='./tmp/test1',**args):
+                job_dir='./tmp/test1',squeeze_param=16,**args):
     logs_path = job_dir + '/logs/' + datetime.now().isoformat()
     print('-----------------------')
     print('Using train_file located at {}'.format(train_files))
@@ -196,7 +195,7 @@ def train_model(train_files='hand-data',
 
     multires_data = [x.astype('float32') for x in multires_data]
     multires_data = [x / 255 for x in multires_data]
-    model = multires_squeezenet(multires_data, True)
+    model = multires_squeezenet(multires_data, True, squeeze_param)
     full = multires_data[0]
     med = multires_data[1]
     low = multires_data[2]
@@ -214,6 +213,9 @@ if __name__ == '__main__':
     parser.add_argument('--job-dir',
                         help='GCS location to write checkpoints and export models',
                         required=True)
+
+    parser.add_argument('--squeeze_param',
+                        help='param for fire module')
     args = parser.parse_args()
     arguments = args.__dict__
     train_model(**arguments)
