@@ -104,18 +104,18 @@ def squeezenet(data, leaky, exclude_top, res, squeeze_param):
     x = Activation(LeakyReLU(), name='relu_conv1' + res)(x)
     x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), name='pool1' + res)(x)
 
-    x = fire_module(x, fire_id=2, leaky=leaky, res=res, squeeze_param=squeeze_param, expand_param=squeeze_param*4)
-    x = fire_module(x, fire_id=3, leaky=leaky, res=res, squeeze_param=squeeze_param, expand_param=squeeze_param*4)
+    x = fire_module(x, fire_id=2, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*4)
+    x = fire_module(x, fire_id=3, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*4)
     x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), name='pool3' + res)(x)
 
-    x = fire_module(x, fire_id=4, leaky=leaky, res=res, squeeze_param=squeeze_param, expand_param=squeeze_param*4)
-    x = fire_module(x, fire_id=5, leaky=leaky, res=res, squeeze_param=squeeze_param, expand_param=squeeze_param*4)
+    x = fire_module(x, fire_id=4, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*4)
+    x = fire_module(x, fire_id=5, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*4)
     x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), name='pool5' + res)(x)
 
-    x = fire_module(x, fire_id=6, leaky=leaky, res=res, squeeze_param=squeeze_param, expand_param=squeeze_param*4)
-    x = fire_module(x, fire_id=7, leaky=leaky, res=res, squeeze_param=squeeze_param, expand_param=squeeze_param*4)
-    x = fire_module(x, fire_id=8, leaky=leaky, res=res, squeeze_param=squeeze_param, expand_param=squeeze_param*4)
-    x = fire_module(x, fire_id=9, leaky=leaky, res=res, squeeze_param=squeeze_param, expand_param=squeeze_param*4)
+    x = fire_module(x, fire_id=6, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*4)
+    x = fire_module(x, fire_id=7, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*4)
+    x = fire_module(x, fire_id=8, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*4)
+    x = fire_module(x, fire_id=9, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*4)
     x = Dropout(0.5, name='drop9' + res)(x)
 
     x = Conv2D(bottleneck, (1, 1), padding='valid', name='conv10' + res)(x)
@@ -141,9 +141,9 @@ def multires_squeezenet(multires_data, leaky, squeeze_param):
     input_medres = Input(multires_data[1].shape[1:], name ='input_medres')
     input_lowres = Input(multires_data[2].shape[1:], name ='input_lowres')
 
-    fullres_squeezenet = squeezenet(input_fullres, leaky=leaky, exclude_top=True, res='full', squeeze_param)
-    medres_squeezenet = squeezenet(input_medres, leaky=leaky, exclude_top=True, res='med', squeeze_param)
-    lowres_squeezenet = squeezenet(input_lowres, leaky=leaky, exclude_top=True, res='low', squeeze_param)
+    fullres_squeezenet = squeezenet(input_fullres, leaky=leaky, exclude_top=True, res='full', squeeze_param=int(squeeze_param))
+    medres_squeezenet = squeezenet(input_medres, leaky=leaky, exclude_top=True, res='med', squeeze_param=int(squeeze_param))
+    lowres_squeezenet = squeezenet(input_lowres, leaky=leaky, exclude_top=True, res='low', squeeze_param=int(squeeze_param))
 
     merged_branches = concatenate([fullres_squeezenet, medres_squeezenet, lowres_squeezenet])
     merged_branches = Dense(128, activation=LeakyReLU())(merged_branches)

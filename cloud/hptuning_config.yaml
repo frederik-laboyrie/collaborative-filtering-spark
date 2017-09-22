@@ -9,4 +9,4 @@ trainingInput:
         type: INTEGER
         minValue: 16
         maxValue: 64
-        scaleType: UNIT_REVERSE_LOG_SCALE
+        scaleType: UNIT_LINEAR_SCALE
