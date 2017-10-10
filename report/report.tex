@@ -7,7 +7,9 @@
 In this work an efficient convolutional neural network (CNN) architecture will be developed which is capable of inferring hand orientation through regression on uncalibrated 2D monocular images. This is a useful technique in augumented reality and human computer interaction which often rely on low resource hardware such as handheld mobile devices.\\
 
 \subsection*{Hand Pose and Orientation Inference}
-Building discriminative models for hand pose and orientation inference is a task which typically requires non-standard architectures due to its intricacy. Global and local features are both useful for these tasks. This is noted in [13] where a multiresolution CNN is used on a dataset of RGBD images for real time pose-recovery. A 96x96 image is downsampled 2x and 4x and these images are passed into separate CNNs before their feature maps are flattened, concatenated and passed into fully-connected layers. It would of course be an alternative to use larger filters but this increases learning capacity greatly and makes the model less likely to generalise.\\
+Building discriminative models for hand pose and orientation inference is a task which typically requires non-standard architectures due to its intricacy. Global and local features are both useful for these tasks due to the intricacy in modelling a hand. Training capacity must be used to model very small changes in a hand and more global features are often sufficient to dismiss many poses or orientations.\\
+
+This technique is used in [13] where a multiresolution CNN is used on a dataset of RGBD images for real time pose-recovery. A 96x96 image is downsampled 2x and 4x, where the more downsampled an image the more global the features which can be extracted. These images are passed into separate CNNs before their feature maps are flattened, concatenated and passed into fully-connected layers. It would of course be an alternative to use larger filters instead of downsampling but this increases learning capacity greatly and makes the model less likely to generalise.\\
 
 In [13] the network is trained to generate 14 18x18 heatmaps which represent the probability of a given joint being in a location. These heatmaps are then combined using the inverse kinematics algorithm to recover the pose of the hand. Note that the training is compartmentalised into 14 separate heatmaps each representing a separate joint, rather than learning the location of all joints individually. These intermediate heatmaps allow the network to focus on local features which increases accuracy. It also allows better recovery of pose if a heatmap fails as the other non-failing heatmaps can be used with a heuristic.\\
 
@@ -25,6 +27,7 @@ This work will focus exclusively on hand orientation on 2D uncalibrated monocula
 
 [17] develops a method in which each expert regressor will output a posterior probability of an example belonging to its subspace. However, instead of using these posterior probabilities naively, during training the ground truth probabilities are used alongside the expert regressor's posterior probabilities to learn a marginalised probability distribution from which the marginalised regressors weights are derived from. Essentially, this is learning a way to combine the  posterior probabilites to form a marginalised probability distribution most similar to the ground truth probability. This was done using a novel optimisation technique similar to  Kullback-Leibler divergence***.\\
 
+[17] using a marginalisation layer followed by expert regressors would make their approach a multi-layer Random Forest (ML-RF hereafter. Whereas [17] developed a novel and generalizable technique as previously described, a significant body of work exists also utilising ML-RF for similar tasks. [18] uses an ML-RF but for hand-pose estimation. The first layer classifies a general shape and the second layer focuses on classifying particular parts of the hand. [18] most noticeably differs from [17] in that the posterior probabilities are used naively and are simply used to weight the posterior probabilities of the second layer. They are not used to model a marginal probability during training. \\
 
 
 \subsection*{Memory Overhead Management}
@@ -95,8 +98,9 @@ quantization and huffman coding. \emph{arxiv:1510.00149v3, 2015a}.
 \item Hinton, Geoffrey, Oriol Vinyals, \& Jeff Dean.  (2015). Distilling the knowledge in a neural network. \emph{arXiv preprint arXiv:1503.02531}.
 \item Tompson, J., Stein, M., Lecun, Y., \& Perlin, K. (2014). Real-time continuous pose recovery of human hands using convolutional networks. \emph{ACM Transactions on Graphics (ToG)}, 33(5), 169.
 \item Oberweger, M., Wohlhart, P., \& Lepetit, V. (2015). Hands deep in deep learning for hand pose estimation. \emph{arXiv preprint arXiv:1502.06807}.
-\item Oberweger, M., Wohlhart, P., \& Lepetit, V. (2015). Training a feedback loop for hand pose estimation. In Proceedings of the IEEE International Conference on Computer Vision (pp. 3316-3324).
+\item Oberweger, M., Wohlhart, P., \& Lepetit, V. (2015). Training a feedback loop for hand pose estimation. In \emph{Proceedings of the IEEE International Conference on Computer Vision} (pp. 3316-3324).
 \item Ge, L., Liang, H., Yuan, J., \& Thalmann, D. (2016). Robust 3D hand pose estimation in single depth images: from single-view CNN to multi-view CNNs. \emph{Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition} (pp. 3593-3601).
+\item Keskin, C., Kıraç, F., Kara, Y. E., \& Akarun, L. (2012, October). Hand pose estimation and hand shape classification using multi-layered randomized decision forests. In \emph{European Conference on Computer Vision (pp. 852-863). Springer Berlin Heidelberg}.
 \end{enumerate}
 
 \end{document}
