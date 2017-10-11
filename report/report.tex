@@ -6,6 +6,8 @@
 \subsection*{Introduction}
 In this work an efficient convolutional neural network (CNN) architecture will be developed which is capable of inferring hand orientation through regression on uncalibrated 2D monocular images. This is a useful technique in augumented reality and human computer interaction which often rely on low resource hardware such as handheld mobile devices.\\
 
+Many challenges have plagued this task due to the complicated nature of hands. For instance natural self occlusion, high joint flexibility and the necessity to be able to model from a wide variety of view points for approaches to be useful in real life situations. \\
+
 \subsection*{Hand Pose and Orientation Inference}
 Building discriminative models for hand pose and orientation inference is a task which typically requires non-standard architectures due to its intricacy. Global and local features are both useful for these tasks due to the intricacy in modelling a hand. Training capacity must be used to model very small changes in a hand and more global features are often sufficient to dismiss many poses or orientations.\\
 
@@ -33,6 +35,9 @@ ML-RF techniques are generally reliant on the results of the first layer. [19] i
 
 ML-RF techniques are computationally cheap and able to achievement acceptable performance but Random Forests are not able to build complex combined features as CNNs are able to. These features allow much greater accuracy and can model on the hand directly whereaas Random Forests must rely on extracted features as well. CNNs consistently achieve state-of-the-art on this task undoubtedly due to these advantages. Vanilla CNNs are extremely costly computationally both during training and run-time. However, recent advances have drastically reduced the cost and size of CNNs with minimal to no loss in computational accuracy. This makes them potentially suitable for this task in real-time. How computaional cost is decreased is described in the following section. \\
 
+It is important to note that despite complex CNN architectures archieving state of the art performance, the gains are not significant over Random Forest methods. A reason noted in [20] is that the CNNs architectures than have emerged are relativel shallow compared to those where achieve state of the art on other tasks such as ImageNet ***. This is partly due to avoid overfitting on small datasets such as the one that will be used in this task. \\
+
+In [20], several best practices are explored whilst using an Regional Ensemble Net architecure, which similarly to other architectures models directly on 3D hand joint co-ordinates. The Regional Ensemble Net architecture produces feature maps which focus on different regions of the image. These region wise feature maps are concatenated and passed into fully-connected layers where they can combine into complex joint features. Concatenating these feature maps rather than using average pooling across the feature maps was shown to improve performance again as the network can learn itself how best to combine them. [20] is unique in that different views of inputs are used simultaneously during training to predict the same pose, rather than just during testing to check robustness. The best practices shown to improve performance in [20] were data augmentation, smooth L1 loss and patch cropping, where a cube from the center of the depth image is extracted and used as further input for training. 
 
 \subsection*{Memory Overhead Management}
 MobileNets [1] utilize depthwise separable convolutions which are efficient both in terms of latency  and number of parameters. These are factorized convolutions in wich depthwise convolutions are performed separately on each input channel. These are then followed by 1x1 pointwise convolutions on each feature map and only then are outputs combined.\\ 
@@ -106,6 +111,7 @@ quantization and huffman coding. \emph{arxiv:1510.00149v3, 2015a}.
 \item Ge, L., Liang, H., Yuan, J., \& Thalmann, D. (2016). Robust 3D hand pose estimation in single depth images: from single-view CNN to multi-view CNNs. \emph{Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition} (pp. 3593-3601).
 \item Keskin, C., Kıraç, F., Kara, Y. E., \& Akarun, L. (2012, October). Hand pose estimation and hand shape classification using multi-layered randomized decision forests. In \emph{European Conference on Computer Vision (pp. 852-863). Springer Berlin Heidelberg}.
 \item Sun, X., Wei, Y., Liang, S., Tang, X., \& Sun, J. (2015). Cascaded hand pose regression. In \emph{Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition} (pp. 824-832).
+\item Guo, H., Wang, G., Chen, X., \& Zhang, C. (2017). Towards Good Practices for Deep 3D Hand Pose Estimation. in \emph{arXiv preprint arXiv:1707.07248}.
 \end{enumerate}
 
 \end{document}
