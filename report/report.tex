@@ -94,7 +94,9 @@ To avoid saturation of gradients in the network, rectified activation units will
 
 This problem can cause large parts of the network to die and results in relatively sparse network. This sparsity was often attributed to the state-of-the-art performances of ReLU. However, advances in rectified activation unit design brought forward units which allow negative gradients to pass. An example is LeakyReLU which scales negative values with a large denominator however this denominator can be parametrised to let more gradient through. Randomized leaky rectified units (RRelu) randomize the amount of negative gradient that passes through and in [6] outperformed other rectified activation units due to the additional regularization.\\
 
-[6] also points out that LeakyReLU units which were very leaky, as in they let more gradient through, outperformed less leaky ones which are more common. It is important to note, however, that the difference in performance between different rectified activation units in [6] is very marginal.
+[6] also points out that LeakyReLU units which were very leaky, as in they let more gradient through, outperformed less leaky ones which are more common. It is important to note, however, that the difference in performance between different rectified activation units in [6] is very marginal.\\
+
+Also, using a fairly complex network structure on an intricate task with a fairly small dataset, particular attention must be paid to the initialization strategy of the network weights. The efficacy of weight intialization and its ability to allow convergence of deep networks was brough to the forefront in [22] with Xavier intialization. For ReLUs, however, the optimal weight strategy of giving weights variance of $1/N$ (where N is the number of units in a layer) was shown not to hold true. Specifically, in [24] it is shown that the optimal variance weights in ReLU based networks is in fact $2/N$ and in many cases networks fail to converge under Xavier intialization. This is not merely empirically observed but the result is rigorously proved in [23].\\
 
 \subsection*{References}
 \begin{enumerate}
@@ -122,6 +124,9 @@ quantization and huffman coding. \emph{arxiv:1510.00149v3, 2015a}.
 \item Sun, X., Wei, Y., Liang, S., Tang, X., \& Sun, J. (2015). Cascaded hand pose regression. In \emph{Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition} (pp. 824-832).
 \item Guo, H., Wang, G., Chen, X., \& Zhang, C. (2017). Towards Good Practices for Deep 3D Hand Pose Estimation. in \emph{arXiv preprint arXiv:1707.07248}.
 \item Shrivastava, A., Pfister, T., Tuzel, O., Susskind, J., Wang, W., \& Webb, R. (2016). Learning from simulated and unsupervised images through adversarial training. in emph{arXiv preprint arXiv:1612.07828}.
+\item Glorot, X., \& Bengio, Y. (2010, March). Understanding the difficulty of training deep feedforward neural networks. In \emph{ Proceedings of the Thirteenth International Conference on Artificial Intelligence and Statistics (pp. 249-256)}.
+\item Kumar, S. K. (2017). On weight initialization in deep neural networks. \emph{arXiv preprint arXiv:1704.08863}.
+\item He, K., Zhang, X., Ren, S., \& Sun, J. (2015). Delving deep into rectifiers: Surpassing human-level performance on imagenet classification. In \emph{Proceedings of the IEEE international conference on computer vision (pp. 1026-1034)}.
 \end{enumerate}
 
 \end{document}
