@@ -43,7 +43,7 @@ SimGAN, the technique developed in [21] generates images adversarially in the fi
 
 Further work exists to make use of the ease of collecting unlabelled which is difficult to utilise in fully-supervised techniques. In [25] a VAE is used to model a lower-dimension representation of 3D hand pose for which a GAN develops a realistic depth map which is what a discriminator is trained on jointly. This, like [21], has the effect of augmenting data as the discriminator can be on trained on examples which can pass through the generative process any given number of times.\\
 
-Note that the generative techniques in [21, 25] are for dataset generation or augmentation and remain completely separate from previous work which uses generative techniques to infer hand pose directly. These more typical modern generative techniques are largely based around building a 3D model of the hand and tracking the individual components of the model in real-time in order to infer the pose. This was done  in [38] where a hand model  where the hand model was build using geometric primitives.\\
+Note that the generative techniques in [21, 25] are for dataset generation or augmentation and remain completely separate from previous work which uses generative techniques to infer hand pose directly. These more typical modern generative techniques are largely based around building a 3D model of the hand and tracking the individual components of the model in real-time in order to infer the pose. This was done  in [26] where a hand model  where the hand model was build using geometric primitives.\\
 
 These generative techniques typically rely on strong computational power with multi-GPU set ups and typically fail to generalize on a new user's hand which cause them to be completely separate to what is aiming to be achieved in this work. Generative techniques also suffer from drift, that is accumulation of errors, which was confronted in [21] using local adversarial loss.\\ 
 
@@ -134,6 +134,7 @@ quantization and huffman coding. \emph{arxiv:1510.00149v3, 2015a}.
 \item Kumar, S. K. (2017). On weight initialization in deep neural networks. \emph{arXiv preprint arXiv:1704.08863}.
 \item He, K., Zhang, X., Ren, S., \& Sun, J. (2015). Delving deep into rectifiers: Surpassing human-level performance on imagenet classification. In \emph{Proceedings of the IEEE international conference on computer vision (pp. 1026-1034)}.
 \item Wan, C., Probst, T., Van Gool, L., \& Yao, A. (2017). Crossing Nets: Combining GANs and VAEs with a Shared Latent Space for Hand Pose Estimation. In \emph{Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (pp. 680-689)}.
+\item Oikonomidis, I., Lourakis, M. I., \& Argyros, A. A. (2014). Evolutionary quasi-random search for hand articulations tracking. In \emph{Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (pp. 3422-3429)}.
 \end{enumerate}
 
 \end{document}
