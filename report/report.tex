@@ -104,6 +104,22 @@ This problem can cause large parts of the network to die and results in relative
 
 Also, using a fairly complex network structure on an intricate task with a fairly small dataset, particular attention must be paid to the initialization strategy of the network weights. The efficacy of weight intialization and its ability to allow convergence of deep networks was brough to the forefront in [22] with Xavier intialization. For ReLUs, however, the optimal weight strategy of giving weights variance of $1/N$ (where N is the number of units in a layer) was shown not to hold true. Specifically, in [24] it is shown that the optimal variance weights in ReLU based networks is in fact $2/N$ and in many cases networks fail to converge under Xavier intialization. This is not merely empirically observed but the result is rigorously proved in [23].\\
 
+\subsection*{Methodology}
+The performance both in terms of latency and accuracy will be compared between SqueezeNets, MobileNets and Vanilla CNNs. I define a Vanilla CNN as one utilising 2D spatial convolutions followed by fully-connected layers. SqueezeNets were chosen as they do not utilise fully-connected layers. In this way, it gives an opportunity to use significantly fewer parameters than the other models.\\
+
+Note that no network compression techniques will be experimented with. This decision was made as networks for hand-orientation or hand-pose estimation tasks tend to be fairly shallow. I deemed it to be more beneficial to focus on latency alone and SqueezeNets provide a very low latency option due to the lack of fully-connected layers.\\
+
+Also, it is a well known result that memory compression techniques can reduce model size without lowering performance drastically. As the focus of this work is not merely to train the lowest possible latency model, but also to generally test convolutional methods on a dataset which has previously only had ML-RF techniques performed it, it is not beneficial to focus too much on model compression and showing a well known results again. That is I prefer to experiment with CNNs designed for low latency rather than generic model compression techniques.\\
+
+A multi-input architecture will be used, as is typical for many other works related to hand-orientation and hand-pose estimation. Specifically, a three input network where one network will take image sizes of 128x128, 64x64 and 32x32. The resultant feature maps of each network will be flattened and concatenated before being passed to the fully-connected layers or in the case of the SqueezeNets just to an output layer.\\
+
+Accuracy will be evaluated based on the mean squared error on both the azimuth and elevation axis angles. Latency will be measured in how many seconds taken to generate predictions on the entire original dataset on an i5 CPU***. Latency will of course be measured on the best performing models in terms of accuracy, but it will be necessary to understand for each model type how sensitive accuracy is to latency. Therefore latency will also have be tested on a significant part of parameter space.\\
+
+Hyperparameter tuning will be performed using Google Cloud ML Engine's implementation of Bayesian optimization on a fixed range of parameters. As training is costly, a standard train-validation-test split will be used to measure performance.\\
+
+\subsection*{Dataset}
+The dataset used is the same which is collected by Asad in [17]. 
+
 \subsection*{References}
 \begin{enumerate}
 \item Howard, A. G., Zhu, M., Chen, B., Kalenichenko, D., Wang, W., Weyand, T., ... \& Adam, H. (2017). MobileNets: Efficient convolutional neural networks for mobile vision applications. \emph{arXiv preprint arXiv:1704.04861}.
