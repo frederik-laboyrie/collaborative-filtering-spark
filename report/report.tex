@@ -115,8 +115,11 @@ The design of fire modules then provides three hyperparameters. The number of 1x
 
 The original implementation of SqueezeNet has the following metaparameters: base = 128, incr = 128, pct 3x3 = 0.5, freq = 2, and squeeze ratio = 0.125. These were used along with ReLU activations are used between the squeeze and expand layers. 50\% Dropout is used between the final fire module and the final convolutional layer. In [9] experiments on the metaparamets are performing on ImageNet showing that increasing \emph{squeeze ratio} from 0.125 (4.8MB model) to 1 was shown to increases in accuracy from 80.6\% to 86\% with a plateau at 0.8 (19MB model) beyond which only model size increases. Likewise a similar plateau exists for \emph{pct 3x3} where only model size increases.\\
 
-More complex SqueezeNet architectures are also developed in [9] using residual connections which avoid bottlenecks as information can flow directly to later layers. Standard residual connections was shown to increase accuracy the most, from 80.3\% to 82.5\% whereas more complex residual connections which themselves contain 1x1 convolutions only increase accuracy to 82\% whilst increasing model size unlike simple connections.
+More complex SqueezeNet architectures are also developed in [9] using residual connections which avoid bottlenecks as information can flow directly to later layers. Standard residual connections was shown to increase accuracy the most, from 80.3\% to 82.5\% whereas more complex residual connections which themselves contain 1x1 convolutions only increase accuracy to 82\% whilst increasing model size unlike simple connections.\\
 
+MobileNets, like SqueezeNets, are fundamentally different to Vanilla CNNs due to their base convolutional layers which utilise 1x1 convolutions. In MobileNets' case these are depthwise separable convolutional layers. Depthwise separable convolutions are factorized convolutions which separate standard spatial convoltuions into depthwise convolutions followed by 1x1 pointwise convolutions.\\
+
+This has the advantage of having 8-9x fewer parameters as in a standard convolution, the spatial height and width of the filter, the number of input channels, the number of output channels and the feature map sizes all compound multiplicitavely into a very large number of parameters. As in [x] if we let \emph{$D_{F}$} and \emph{$D_{K}$} represent the height or widths of a feature map and kernel height respectively, and further let \emph{M} represent the number of input channels and \emph{N} the number of output channels, then the number of parameters in standard convolution can be expressed as: \[\emph{$D_{F}$} x \emph{$D_{F}$} x M x N x \emph{$D_{K}$} x \emph{$D_{K}$} + M x N x \] Whereas if the convolution is separated into its depthwise and pointwise components then the cost is: \[\emph{$D_{F}$} x \emph{$D_{F}$} x M x \emph{$D_{K}$} x \emph{$D_{F}$} x \emph{$D_{F}$} x \emph{$D_{F}$}\].
 
 \subsection*{Methodology}
 The performance both in terms of latency and accuracy will be compared between SqueezeNets, MobileNets and Vanilla CNNs. I define a Vanilla CNN as one utilising 2D spatial convolutions followed by fully-connected layers. SqueezeNets were chosen as they do not utilise fully-connected layers. In this way, it gives an opportunity to use significantly fewer parameters than the other models.\\
@@ -131,6 +134,9 @@ Accuracy will be evaluated based on the mean squared error on both the azimuth a
 
 Hyperparameter tuning will be performed using Google Cloud ML Engine's implementation of Bayesian optimization on a fixed range of parameters. As training is costly, a standard train-validation-test split will be used to measure performance.\\
 
+
+***Notes
+number of mult-adds not equal to performance i.e. irregular sparsity creates bottlenecks and it doesn't help. so random pruning helps but is largely for model size. less reg, less data aug -> small models don't have problems with overfitting as much.
 \subsection*{Dataset}
 The dataset used is the same which is collected by Asad in [17]. 
 
