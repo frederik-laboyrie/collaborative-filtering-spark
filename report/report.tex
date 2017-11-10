@@ -8,6 +8,8 @@ In this work an efficient convolutional neural network (CNN) architecture will b
 
 Many challenges have plagued this task due to the complicated nature of hands. For instance natural self occlusion, high joint flexibility and the necessity to be able to model from a wide variety of view points for approaches to be useful in real life situations. \\
 
+\subsection{Convolutional Neural Networks}
+
 \subsection*{Hand Pose and Orientation Inference}
 Building discriminative models for hand pose and orientation inference is a task which typically requires non-standard architectures due to its intricacy. Global and local features are both useful for these tasks due to the intricacy in modelling a hand. Training capacity must be used to model very small changes in a hand and more global features are often sufficient to dismiss many poses or orientations.\\
 
@@ -137,11 +139,16 @@ Accuracy will be evaluated based on the mean squared error on both the azimuth a
 
 Hyperparameter tuning will be performed using Google Cloud ML Engine's implementation of Bayesian optimization on a fixed range of parameters. As training is costly, a standard train-validation-test split will be used to measure performance.\\
 
+\subsection{Error Metric}
+The networks are configured to output both the elevation and azimuth angle. This obviously has the benefit of these error signals being able to propagate back through the network separately. As in [1] we analyse the error of each of these angles separately in order to understand the performance of the models. It was typical in [1]'s experiments that certain examples would perform well in one angle but be unable to gain accuracy in the other angle.\\
+
+In order to compare results with [1], both error metrics are adopted. Mean average error (of azimuth and elevation angles) and combined mean average error (MAE and CMAE hereafter).
+
 
 ***Notes
 number of mult-adds not equal to performance i.e. irregular sparsity creates bottlenecks and it doesn't help. so random pruning helps but is largely for model size. less reg, less data aug -> small models don't have problems with overfitting as much.
 \subsection*{Dataset}
-The dataset used is the same which is collected by Asad in [17]. The dataset consists of 11111 RGB images of 13 different participants hands against a plain background. Ground truth orientation is inferred by simultaneously capturing depth images of the participants' hands using a Kinect sensor. The plane that implicitly sits across the 3D point cloud is calculated using the RANSAC algorithm on these coordinates. From this plane equation the normal vector can be calculated as the transpose of the x, y and z components of the plane equation. These inverse cosine of these x and y components are used to calculate the azimuth and elevation angles which provide the ground truth labels for training. Formally, as shown in [1], this is:
+The dataset used is the same which is collected by Asad in [17]. The dataset consists of 11111111111 RGB images of 13 different participants hands against a plain background. Ground truth orientation is inferred by simultaneously capturing depth images of the participants' hands using a Kinect sensor. The plane that implicitly sits across the 3D point cloud is calculated using the RANSAC algorithm on these coordinates. From this plane equation the normal vector can be calculated as the transpose of the x, y and z components of the plane equation. These inverse cosine of these x and y components are used to calculate the azimuth and elevation angles which provide the ground truth labels for training. Formally, as shown in [1], this is:
 
 \[\emph{$n_{0}$} =  \emph{$xn_{x}$} + \emph{$yn_{y}$} + \emph{$zn_{z}$}\]
 
@@ -151,7 +158,9 @@ The dataset used is the same which is collected by Asad in [17]. The dataset con
 
 \[\emph{$\Psi_{k}$} =  [\emph{$cos^{-1}n_{y}$}\]
 
-RANSAC is well suited to this task as it takes a random sample of points in each iteration making it more resilient to outliers. Outliers in this case could be of particularly large effect as the hand takes up a fairly small proportion of the image. This means small errors can be amplified into larger ones causing inaccuracies in the labels and creating difficulties in the training process where very similar images have vastly different labels.\\
+RANSAC is well suited to this task as it takes a random sample of points in each iteration making it more resilient to outliers. Outliers in this case could be of particularly large effect as the hand takes up a fairly small proportion of the image. This means small errors can be amplified into larger ones causing inaccuracies in the labels and creating difficulties in the training process where very similar images have vastly different labels.[1]\\
+
+In [1] a painting game was also developed during the data collection process, where a user is given feedback showing how much of the orientation space they have managed to fill with sufficient samples. This was in response to earlier datasets which had inconsistencies and gaps in orientation space as users failed to provide sufficient examples for the entirety of orientation space. This then provides a consistent and balanced dataset already from the collection phase and does not require and post-processing to balance the dataset.
 
 
 
