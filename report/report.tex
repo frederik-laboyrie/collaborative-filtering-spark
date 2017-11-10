@@ -119,7 +119,10 @@ More complex SqueezeNet architectures are also developed in [9] using residual c
 
 MobileNets, like SqueezeNets, are fundamentally different to Vanilla CNNs due to their base convolutional layers which utilise 1x1 convolutions. In MobileNets' case these are depthwise separable convolutional layers. Depthwise separable convolutions are factorized convolutions which separate standard spatial convoltuions into depthwise convolutions followed by 1x1 pointwise convolutions.\\
 
-This has the advantage of having 8-9x fewer parameters as in a standard convolution, the spatial height and width of the filter, the number of input channels, the number of output channels and the feature map sizes all compound multiplicitavely into a very large number of parameters. As in [x] if we let \emph{$D_{F}$} and \emph{$D_{K}$} represent the height or widths of a feature map and kernel height respectively, and further let \emph{M} represent the number of input channels and \emph{N} the number of output channels, then the number of parameters in standard convolution can be expressed as: \[\emph{$D_{F}$} x \emph{$D_{F}$} x M x N x \emph{$D_{K}$} x \emph{$D_{K}$} + M x N x \] Whereas if the convolution is separated into its depthwise and pointwise components then the cost is: \[\emph{$D_{F}$} x \emph{$D_{F}$} x M x \emph{$D_{K}$} x \emph{$D_{F}$} x \emph{$D_{F}$} x \emph{$D_{F}$}\].
+This has the advantage of having 8-9x fewer parameters as in a standard convolution, the spatial height and width of the filter, the number of input channels, the number of output channels and the feature map sizes all compound multiplicitavely into a very large number of parameters. As in [x] if we let \emph{$D_{F}$} and \emph{$D_{K}$} represent the height or widths of a feature map and kernel height respectively, and further let \emph{M} represent the number of input channels and \emph{N} the number of output channels, then the number of parameters in standard convolution can be expressed as: \[\emph{$D_{F}$} x \emph{$D_{F}$} x M x N x \emph{$D_{K}$} x \emph{$D_{K}$} + M x N x \] Whereas if the convolution is separated into its depthwise and pointwise components then the cost is: \[\emph{$D_{F}$} x \emph{$D_{F}$} x M x \emph{$D_{K}$} x \emph{$D_{F}$} x \emph{$D_{F}$} x \emph{$D_{F}$}\].\\
+
+It is important to note at this point that it is not of major use to purely put emphasis on number of parameters when measuring the efficiency of a model. This is because number of mult-adds does not necessarily scale uniformly with latency. On a per-module basis, that is number of parameters in a fire module for example, number of parameters would of course scale fairly uniformly with latency. However, over an entire model for example, the number of mult-adds can be reduced using pruning. This creates a sparse model with bottlenecks and the latency of the model will not reduce at the same rate as number of mult-adds. [1] \\
+
 
 \subsection*{Methodology}
 The performance both in terms of latency and accuracy will be compared between SqueezeNets, MobileNets and Vanilla CNNs. I define a Vanilla CNN as one utilising 2D spatial convolutions followed by fully-connected layers. SqueezeNets were chosen as they do not utilise fully-connected layers. In this way, it gives an opportunity to use significantly fewer parameters than the other models.\\
@@ -138,7 +141,29 @@ Hyperparameter tuning will be performed using Google Cloud ML Engine's implement
 ***Notes
 number of mult-adds not equal to performance i.e. irregular sparsity creates bottlenecks and it doesn't help. so random pruning helps but is largely for model size. less reg, less data aug -> small models don't have problems with overfitting as much.
 \subsection*{Dataset}
-The dataset used is the same which is collected by Asad in [17]. 
+The dataset used is the same which is collected by Asad in [17]. The dataset consists of 11111 RGB images of 13 different participants hands against a plain background. Ground truth orientation is inferred by simultaneously capturing depth images of the participants' hands using a Kinect sensor. The plane that implicitly sits across the 3D point cloud is calculated using the RANSAC algorithm on these coordinates. From this plane equation the normal vector can be calculated as the transpose of the x, y and z components of the plane equation. These inverse cosine of these x and y components are used to calculate the azimuth and elevation angles which provide the ground truth labels for training. Formally, as shown in [1], this is:
+
+\[\emph{$n_{0}$} =  \emph{$xn_{x}$} + \emph{$yn_{y}$} + \emph{$zn_{z}$}\]
+
+\[\emph{$N$} =  [\emph{$n_{x}$}, \emph{$n_{y}$}, \emph{$zn_{z}$}]^T\]
+
+\[\emph{$\Phi_{k}$} =  [\emph{$cos^{-1}n_{x}$}\]
+
+\[\emph{$\Psi_{k}$} =  [\emph{$cos^{-1}n_{y}$}\]
+
+RANSAC is well suited to this task as it takes a random sample of points in each iteration making it more resilient to outliers. Outliers in this case could be of particularly large effect as the hand takes up a fairly small proportion of the image. This means small errors can be amplified into larger ones causing inaccuracies in the labels and creating difficulties in the training process where very similar images have vastly different labels.\\
+
+
+
+
+
+
+
+ pruning
+***Notes
+number of mult-adds not equal to performance i.e. irregular sparsity creates bottlenecks and it doesn't help. so random pruning helps but is largely for model size. less reg, less data aug -> small models don't have problems with overfitting as much.
+
+
 
 \subsection*{References}
 \begin{enumerate}
