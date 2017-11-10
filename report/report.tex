@@ -9,6 +9,11 @@ In this work an efficient convolutional neural network (CNN) architecture will b
 Many challenges have plagued this task due to the complicated nature of hands. For instance natural self occlusion, high joint flexibility and the necessity to be able to model from a wide variety of view points for approaches to be useful in real life situations. \\
 
 \subsection{Convolutional Neural Networks}
+All discriminative models built in this work will be variations of a vanilla convolutional neural network. To understand and describe the benefits of using these variations it is important to generally define these networks but also specifically how matrices convolve whilst passing through these networks.\\
+
+... \\
+
+Typically these convolutional operations are followed by pooling operations which reduce the size of the feature maps. For example, a max pooling operation would just take the largest value in a matrix. This both has the effect of producing condensed, summarised representations of the feature maps, which allows higher-order features to be convolved on in later layers, but also it provides invariance to translation. Intuitively, this is not a feature that is beneficial in hand orientation inference where the location of a feature, such as an edge, is of the utmost importance in determining the orientation. \\
 
 \subsection*{Hand Pose and Orientation Inference}
 Building discriminative models for hand pose and orientation inference is a task which typically requires non-standard architectures due to its intricacy. Global and local features are both useful for these tasks due to the intricacy in modelling a hand. Training capacity must be used to model very small changes in a hand and more global features are often sufficient to dismiss many poses or orientations.\\
