@@ -8,10 +8,16 @@ In this work an efficient convolutional neural network (CNN) architecture will b
 
 Many challenges have plagued this task due to the complicated nature of hands. For instance natural self occlusion, high joint flexibility and the necessity to be able to model from a wide variety of view points for approaches to be useful in real life situations. \\
 
-\subsection{Convolutional Neural Networks}
+\subsection*{Convolutional Neural Networks}
 All discriminative models built in this work will be variations of a vanilla convolutional neural network. To understand and describe the benefits of using these variations it is important to generally define these networks but also specifically how matrices convolve whilst passing through these networks.\\
 
-... \\
+Convolutional neural networks use convolution oeprations instead of general matrix multiplication in any given layer. Convolutions are able to take advantage of spatial topology that exists in the input data. In the case of images this is of course a 2D topology in which pixel values relate to each other spatially on an x-y plane.\\
+
+A convolution operation comprises of a kernel being applied to  typically all possible parts of the input. For example, with an image, a 5x5 kernel would be applied to each 5x5 square of pixels at all possible points in the image. The output of from each convolution provides a component for a feature map which is then passed to the next layer. The parameters in the kernel are learnt during training and can learn to recognise edges or higher level features later in the network.\\
+
+Using kernels makes convolutional neural networks much more parameter efficient than fully-connected networks as they allow sparse interactions as there is not a parameter connecting each input unit with each output unit. However, as convolutional networks typically work with very high dimensional input, as in images with thousands of pixels, the cost of convolutional neural networks can still be very high overall. \\
+
+Further, latency of convolutional neural networks increases drastically as kernel sizes increase and the number of required mult-adds increases near quadratically. This is the case with standard convolutions where one kernel of a given size produces output for each x coordinate, y coordinate and input channel. Techniques to reduce latency using different convolutional techniques is discussed at length in \emph{memory overhead management}
 
 Typically these convolutional operations are followed by pooling operations which reduce the size of the feature maps. For example, a max pooling operation would just take the largest value in a matrix. This both has the effect of producing condensed, summarised representations of the feature maps, which allows higher-order features to be convolved on in later layers, but also it provides invariance to translation. Intuitively, this is not a feature that is beneficial in hand orientation inference where the location of a feature, such as an edge, is of the utmost importance in determining the orientation. \\
 
@@ -210,6 +216,7 @@ quantization and huffman coding. \emph{arxiv:1510.00149v3, 2015a}.
 \item He, K., Zhang, X., Ren, S., \& Sun, J. (2015). Delving deep into rectifiers: Surpassing human-level performance on imagenet classification. In \emph{Proceedings of the IEEE international conference on computer vision (pp. 1026-1034)}.
 \item Wan, C., Probst, T., Van Gool, L., \& Yao, A. (2017). Crossing Nets: Combining GANs and VAEs with a Shared Latent Space for Hand Pose Estimation. In \emph{Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (pp. 680-689)}.
 \item Oikonomidis, I., Lourakis, M. I., \& Argyros, A. A. (2014). Evolutionary quasi-random search for hand articulations tracking. In \emph{Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (pp. 3422-3429)}.
+\item Goodfellow, I., Bengio, Y., Courville, A., Deep Learning (2016), \emph{MIT Press}.
 \end{enumerate}
 
 \end{document}
