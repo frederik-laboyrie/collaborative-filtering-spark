@@ -25,6 +25,9 @@ It is also possible to downsample during the convolution phase. This is done by 
 
 It is most typical for a convolutional neural network to be comprised of alternating layers of standard convolutions and pooling operations before the a feature map is flattened and past into several fully-connected layers. The fully-connected layers at the top can easily contain the vast majority of parameters due to the lack of sparse interactions. In a classification or regression task they serve to accurately output a class label or value. Although, in many cases they are not required as is the case with SqueezeNets [8] which achieve near state-of-the-art accuracy whilst being fully convolutional. ... \\
 
+In [27] it is noted that convolutional neural networks have played a significant role in bring deep learning into the forefront of machine learning generally by allowing great advances in accuracy, solving many commercial applications and winning many contests. [27] states that is not completely clear the exact reason that convolutional neural networks were able to achieve such great improvement in accuracy.\\ 
+
+Advances in 2012 when Khrizhevsky won ImageNet by training a deep convolutional neural network on a GPU allowed great improvements in training time which of course allows for more efficient parameter tuning. It would be unreasonable to attribute all of their success to this and other architectural advances have allowed for training of much deeper networks which are generally easier to train without diverging. One example of these architectural advances are residual connections which allow feature maps to skip layers and makes training more robust because... . These were popularies in [....] but are seen as a variation in training in other works, most relevant to this work is in SqueezeNets [...] original experiments.
 [p.350 DL]
 
 \subsection*{Hand Pose and Orientation Inference}
@@ -139,7 +142,7 @@ More complex SqueezeNet architectures are also developed in [9] using residual c
 MobileNets, like SqueezeNets, are fundamentally different to Vanilla CNNs due to their base convolutional layers which utilise 1x1 convolutions. In MobileNets' case these are depthwise separable convolutional layers. Depthwise separable convolutions are factorized convolutions which separate standard spatial convoltuions into depthwise convolutions followed by 1x1 pointwise convolutions.\\
 
 [p. 350 dl]
-For instance, a 2-dimensional kernel which can be expressed as an outer product of 2 vectors, one in the x direction and one in the y direciton, would be a separable kernel. It is equivalent to construct 2 one d vectors to the conv \\
+For instance, a 2-dimensional kernel which can be expressed as an outer product of 2 vectors, one in the x direction and one in the y direciton, would be a separable kernel. It is equivalent to perform convolutions using these 2 1-dimensional vectors and then combine their outputs using 1x1 pointwise convolutions. This technique scales to multi-dimensions, for instance when there are multiple feature maps deriving from different kernels. The efficiency gains in parameters are quadratic in that if you have \emph{d} dimensions and kernels which are \emph{w} units wide, the cost of convolution operation would be \emph{O(w^d)} for separable convolution and \emph{O(W x d)} for standard convolutions. [27] \\
 
 This has the advantage of having 8-9x fewer parameters as in a standard convolution, the spatial height and width of the filter, the number of input channels, the number of output channels and the feature map sizes all compound multiplicitavely into a very large number of parameters. As in [x] if we let \emph{$D_{F}$} and \emph{$D_{K}$} represent the height or widths of a feature map and kernel height respectively, and further let \emph{M} represent the number of input channels and \emph{N} the number of output channels, then the number of parameters in standard convolution can be expressed as: \[\emph{$D_{F}$} x \emph{$D_{F}$} x M x N x \emph{$D_{K}$} x \emph{$D_{K}$} + M x N x \] Whereas if the convolution is separated into its depthwise and pointwise components then the cost is: \[\emph{$D_{F}$} x \emph{$D_{F}$} x M x \emph{$D_{K}$} x \emph{$D_{F}$} x \emph{$D_{F}$} x \emph{$D_{F}$}\].\\
 
@@ -157,7 +160,13 @@ A multi-input architecture will be used, as is typical for many other works rela
 
 Accuracy will be evaluated based on the mean squared error on both the azimuth and elevation axis angles. Latency will be measured in how many seconds taken to generate predictions on the entire original dataset on an i5 CPU***. Latency will of course be measured on the best performing models in terms of accuracy, but it will be necessary to understand for each model type how sensitive accuracy is to latency. Therefore latency will also have be tested on a significant part of parameter space.\\
 
-Hyperparameter tuning will be performed using Google Cloud ML Engine's implementation of Bayesian optimization on a fixed range of parameters. As training is costly, a standard train-validation-test split will be used to measure performance.\\
+Hyperparameter tuning will be performed using Google Cloud ML Engine's implementation of Bayesian optimization on a fixed range of parameters. Bayesian optimization is an alternative to a naive grid search which allows a more efficient exploration of hyper parameter space. Naive grid search wastes a great amount of computation on calculating performance in area of parameter space which is unlikely to yield optimal results.\\
+
+Bayesian optimization works by modelling the function we are interested in optimizing not only using local gradient information but also all past evaluations of the function. In this way, the Bayesian framework makes a probabilistic evaluation of the function during training and chooses hyperparameters than have the highest probability of improving the model's performance.\\
+
+ There are drawbacks to Bayesian optimization in that the covariance functions which controls the distribution of functions that are evaluated itself has to parametrised and there is little to no theoretical grounding in how to do this. Nevertheless, in [28] in which the framework is proposed state-of-the-art was surpassed by 3\% with significantly less training time than previous approaches. As the training process in this work will be costly, Bayesian optimization will allow a larger hyperparemter space to be explored and is configured in Google Cloud ML to still be able to take advantage of parallel computing which is cited in [28] as a consideration on whether the technique is able to gain significant efficiencies as compared to naive grid search. \\
+ 
+ With such measures being taken to efficiently explore hyperparameter space, it is an an obvious choice to use a standard train-validation-test split will be used to measure performance. K-fold cross validation was deemed too costly.\\
 
 \subsection{Error Metric}
 The networks are configured to output both the elevation and azimuth angle. This obviously has the benefit of these error signals being able to propagate back through the network separately. As in [1] we analyse the error of each of these angles separately in order to understand the performance of the models. It was typical in [1]'s experiments that certain examples would perform well in one angle but be unable to gain accuracy in the other angle.\\
@@ -226,6 +235,7 @@ quantization and huffman coding. \emph{arxiv:1510.00149v3, 2015a}.
 \item Wan, C., Probst, T., Van Gool, L., \& Yao, A. (2017). Crossing Nets: Combining GANs and VAEs with a Shared Latent Space for Hand Pose Estimation. In \emph{Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (pp. 680-689)}.
 \item Oikonomidis, I., Lourakis, M. I., \& Argyros, A. A. (2014). Evolutionary quasi-random search for hand articulations tracking. In \emph{Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (pp. 3422-3429)}.
 \item Goodfellow, I., Bengio, Y., Courville, A., Deep Learning (2016), \emph{MIT Press}.
+\item Snoek, J., Larochelle, H., \& Adams, R. P. (2012). Practical bayesian optimization of machine learning algorithms. In \emph{Advances in neural information processing systems} (pp. 2951-2959).
 \end{enumerate}
 
 \end{document}
