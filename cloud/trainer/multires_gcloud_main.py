@@ -18,6 +18,7 @@ from datetime import datetime  # for filename conventions
 
 from tensorflow.python.lib.io import file_io  # for better file I/O
 
+
 def get_input_shape(data):
     num_samples = data.shape[0]
     channels = 3
@@ -25,11 +26,14 @@ def get_input_shape(data):
     img_cols = data.shape[3]
     return (num_samples, img_rows, img_cols, channels)
 
+
 def reshape(data):
     return np.reshape(data, get_input_shape(data))
 
+
 def subsample(data, labels, nb_samples):
     return data[:nb_samples], labels[:nb_samples]
+
 
 def per_image_standardization(arrays):
     '''only works for 1 call before
@@ -104,8 +108,9 @@ def train_model(train_files='hand-data',
     labelsio = StringIO(file_io.read_file_to_string(train_files+'/AllAngles.npy'))
 
     images = np.load(imagesio)
-    labels_ = np.load(labelsio)
-    labels = labels_[:500]
+    #labels_ = np.load(labelsio)
+    #labels = labels_[:500]
+    labels = np.load(labelsio)
 
     #file_stream_images = file_io.FileIO(train_files+'/AllImages.npy', mode='r')
     #file_stream_labels = file_io.FileIO(train_files+'/AllAngles.npy', mode='r')

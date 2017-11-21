@@ -167,7 +167,7 @@ def multiinput_generator(full, med, low, label):
                 featurewise_std_normalization=False,  # divide inputs by std of the dataset
                 samplewise_std_normalization=True,  # divide each input by its std
                 zca_whitening=False)  # randomly flip images
-        batches = datagen.flow( full[idx], label[idx], batch_size=8, shuffle=False)
+        batches = datagen.flow( full[idx], label[idx], batch_size=4, shuffle=False)
         idx0 = 0
         for batch in batches:
             idx1 = idx0 + batch[0].shape[0]
@@ -202,8 +202,12 @@ def train_model(train_files='hand-data',
     low = multires_data[2]
     history = model.fit_generator(multiinput_generator(full, med, low, labels),
                                                        steps_per_epoch=32,
-                                                       epochs=100)
-    model.save('model.h5')
+                                                       epochs=32*5)
+    results = model.predict([full,med,low])
+    error1, error2 = np.mean(abs(results[:, 0] - labels[:, 0])), np.mean(abs(results[:, 1]
+                                                                             - labels[:, 1]))
+    print('error 1 = {}'.format(error1))
+    print('error 2 = {}'.format(error2))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
