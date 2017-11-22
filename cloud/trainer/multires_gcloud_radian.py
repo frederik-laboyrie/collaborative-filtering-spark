@@ -157,10 +157,10 @@ def train_model(train_files='hand-data',
     print('Using train_file located at {}'.format(train_files))
     print('Using logs_path located at {}'.format(logs_path))
     print('-----------------------')
-
+    # wrong names for now.....
     imagesio = StringIO(file_io.read_file_to_string(train_files+'/AllImages.npy'))
-    imagesio64 = StringIO(file_io.read_file_to_string(train_files+'/AllImages64.npy'))
-    imagesio32 = StringIO(file_io.read_file_to_string(train_files+'/AllImages32.npy'))
+    imagesio64 = StringIO(file_io.read_file_to_string(train_files+'/AllAngles64.npy'))
+    imagesio32 = StringIO(file_io.read_file_to_string(train_files+'/AllAngles32.npy'))
     labelsio = StringIO(file_io.read_file_to_string(train_files+'/AllAngles.npy'))
 
     full = np.load(imagesio)
