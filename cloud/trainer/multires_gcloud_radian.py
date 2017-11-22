@@ -9,6 +9,7 @@ import pickle  # for handling the new data source
 import h5py  # for saving the model
 import keras
 import tensorflow as tf
+from keras.preprocessing.image import ImageDataGenerator
 from keras.layers import Conv2D, MaxPooling2D, AveragePooling2D, Dropout, Flatten, Dense, Input
 from keras.layers.merge import concatenate
 from keras.layers.normalization import BatchNormalization
@@ -27,12 +28,11 @@ def multiinput_generator(full, med, low, label):
         # shuffled indices
         idx = np.random.permutation(full.shape[0])
         # create image generator
-        datagen = ImageDataGenerator(
-                featurewise_center=False,  # set input mean to 0 over the dataset
-                samplewise_center=False,  # set each sample mean to 0
-                featurewise_std_normalization=False,  # divide inputs by std of the dataset
-                samplewise_std_normalization=True,  # divide each input by its std
-                zca_whitening=False)  # randomly flip images
+        datagen = ImageDataGenerator(featurewise_center=False,  # set input mean to 0 over the dataset
+                                     samplewise_center=False,  # set each sample mean to 0
+                                     featurewise_std_normalization=False,  # divide inputs by std of the dataset
+                                     samplewise_std_normalization=True,  # divide each input by its std
+                                     zca_whitening=False)  # randomly flip images
         batches = datagen.flow(full[idx], label[idx], batch_size=16, shuffle=False)
         idx0 = 0
         for batch in batches:
@@ -90,10 +90,10 @@ def generator_train(full, med, low, labels):
     model.fit_generator(multiinput_generator(train_full, train_med, train_low, train_labels),
                         steps_per_epoch=16,
                         epochs=50)
-    return model, test_full, test_med, test_low, test_labels
+    return model, test_full, test_med, test_low, test_labels, mean_, std_
 
 
-def calculate_error(model, test_full, test_med, test_low, test_labels):
+def calculate_error(model, test_full, test_med, test_low, test_labels, mean_, std_):
     std_angles = model.predict([test_full, test_med, test_low])
     unstd_angles = reverse_mean_std(std_angles, mean_, std_)
     error = unstd_angles - test_labels
@@ -107,43 +107,43 @@ def calculate_error(model, test_full, test_med, test_low, test_labels):
 def mean_std_norm(array):
     '''standardization for labels
     '''
-    mean_ = mean(array)
-    std_ = std(array)
+    mean_ = np.mean(array)
+    std_ = np.std(array)
     standardized = (array - mean_) / std_
     return standardized, mean_, std_
 
 
-def multires_CNN(filters, kernel_size, full, med low):
+def multires_CNN(filters, kernel_size, full, med, low):
     '''uses Functional API for Keras 2.x support.
        multires data is output from load_standardized_multires()
     '''
-    input_fullres = Input(full.shape[1:], name = 'input_fullres')
+    input_fullres = Input(full.shape[1:], name='input_fullres')
     fullres_branch = Conv2D(filters, (kernel_size, kernel_size),
-                     activation = LeakyReLU())(input_fullres)
-    fullres_branch = MaxPooling2D(pool_size = (2,2))(fullres_branch)
+                            activation=LeakyReLU())(input_fullres)
+    fullres_branch = MaxPooling2D(pool_size=(2, 2))(fullres_branch)
     fullres_branch = BatchNormalization()(fullres_branch)
     fullres_branch = Flatten()(fullres_branch)
 
-    input_medres = Input(med.shape[1:], name = 'input_medres')
+    input_medres = Input(med.shape[1:], name='input_medres')
     medres_branch = Conv2D(filters, (kernel_size, kernel_size),
-                     activation=LeakyReLU())(input_medres)
-    medres_branch = MaxPooling2D(pool_size = (2,2))(medres_branch)
+                           activation=LeakyReLU())(input_medres)
+    medres_branch = MaxPooling2D(pool_size=(2, 2))(medres_branch)
     medres_branch = BatchNormalization()(medres_branch)
     medres_branch = Flatten()(medres_branch)
 
-    input_lowres = Input(low.shape[1:], name = 'input_lowres')
+    input_lowres = Input(low.shape[1:], name='input_lowres')
     lowres_branch = Conv2D(filters, (kernel_size, kernel_size),
-                     activation = LeakyReLU())(input_lowres)
-    lowres_branch = MaxPooling2D(pool_size = (2,2))(lowres_branch)
+                           activation=LeakyReLU())(input_lowres)
+    lowres_branch = MaxPooling2D(pool_size=(2, 2))(lowres_branch)
     lowres_branch = BatchNormalization()(lowres_branch)
     lowres_branch = Flatten()(lowres_branch)
 
     merged_branches = concatenate([fullres_branch, medres_branch, lowres_branch])
     merged_branches = Dense(128, activation=LeakyReLU())(merged_branches)
     merged_branches = Dropout(0.5)(merged_branches)
-    merged_branches = Dense(2,activation='linear')(merged_branches)
+    merged_branches = Dense(2, activation='linear')(merged_branches)
 
-    model = Model(inputs=[input_fullres, input_medres ,input_lowres],
+    model = Model(inputs=[input_fullres, input_medres, input_lowres],
                   outputs=[merged_branches])
     model.compile(loss='mean_absolute_error', optimizer='adam')
 
@@ -151,7 +151,7 @@ def multires_CNN(filters, kernel_size, full, med low):
 
 
 def train_model(train_files='hand-data',
-                job_dir='./tmp/test1',**args):
+                job_dir='./tmp/test1', **args):
     logs_path = job_dir + '/logs/' + datetime.now().isoformat()
     print('-----------------------')
     print('Using train_file located at {}'.format(train_files))
@@ -168,14 +168,13 @@ def train_model(train_files='hand-data',
     low = np.load(imagesio32)
     labels = np.load(labelsio)
 
-    model, test_full, test_med, test_low, test_labels = generator_train(full, med, low, labels)
+    model, test_full, test_med, test_low, test_labels, mean_, std_ = generator_train(full, med, low, labels)
 
-    error = calculate_error(model, test_full, test_med, test_low, test_labels)
-    #file_stream_images = file_io.FileIO(train_files+'/AllImages.npy', mode='r')
-    #file_stream_labels = file_io.FileIO(train_files+'/AllAngles.npy', mode='r')
-    #images = np.load(file_stream_images)
-    #labels = np.load(file_stream_labels)
-
+    error = calculate_error(model, test_full, test_med, test_low, test_labels, mean_, std_)
+    # file_stream_images = file_io.FileIO(train_files+'/AllImages.npy', mode='r')
+    # file_stream_labels = file_io.FileIO(train_files+'/AllAngles.npy', mode='r')
+    # images = np.load(file_stream_images)
+    # labels = np.load(file_stream_labels)
 
 
 if __name__ == '__main__':
@@ -194,4 +193,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
     arguments = args.__dict__
     train_model(**arguments)
-
