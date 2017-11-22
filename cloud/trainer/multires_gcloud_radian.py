@@ -33,7 +33,7 @@ def multiinput_generator(full, med, low, label):
                 featurewise_std_normalization=False,  # divide inputs by std of the dataset
                 samplewise_std_normalization=True,  # divide each input by its std
                 zca_whitening=False)  # randomly flip images
-        batches = datagen.flow(full[idx], label[idx], batch_size=32, shuffle=False)
+        batches = datagen.flow(full[idx], label[idx], batch_size=16, shuffle=False)
         idx0 = 0
         for batch in batches:
             idx1 = idx0 + batch[0].shape[0]
@@ -41,40 +41,6 @@ def multiinput_generator(full, med, low, label):
             idx0 = idx1
             if idx1 >= full.shape[0]:
                 break
-
-
-def resizer(arrays, size, method):
-    return tf.map_fn(lambda array: 
-                     tf.image.resize_images(array,
-                                            [size, size],
-                                            method=method), 
-                     arrays)
-
-
-def singleres_to_multires(arrays, size1=64, size2=32, 
-                          method=tf.image.ResizeMethod.BILINEAR):
-    with tf.Session() as session:
-        size1_arrays = resizer(arrays, size1, method).eval()
-        size2_arrays = resizer(arrays, size2, method).eval()
-    return [arrays, size1_arrays, size2_arrays]
-
-
-def load_multires(images, labels):
-    images_reshape = reshape(images)
-    multires_images = singleres_to_multires(images)
-    return multires_images, labels
-
-
-def get_input_shape(data):
-    num_samples = data.shape[0]
-    channels = 3
-    img_rows = data.shape[2]
-    img_cols = data.shape[3]
-    return (num_samples, img_rows, img_cols, channels)
-
-
-def reshape(data):
-    return np.reshape(data, get_input_shape(data))
 
 
 def train_test_split(array, proportion=0.8):
@@ -102,18 +68,18 @@ def reverse_mean_std(standardized_array, prev_mean, prev_std):
     return de_mean
 
 
-def generator_train(images, labels):
+def generator_train(full, med, low, labels):
     '''main entry point
        calls customised  multiinput generator
        and tests angle loss
     '''
-    multires_data, labels = load_multires(images, labels)
-    multires_data = [x.astype('float32') for x in multires_data]
-    multires_data = [x / 255 for x in multires_data]
-    model = multires_CNN(16, 5, multires_data)
-    full = multires_data[0]
-    med = multires_data[1]
-    low = multires_data[2]
+    full = [x.astype('float32') for x in full]
+    full = [x / 255 for x in full]
+    med = [x.astype('float32') for x in med]
+    med = [x / 255 for x in med]
+    low = [x.astype('float32') for x in low]
+    low = [x / 255 for x in low]
+    model = multires_CNN(16, 5, full, med, low)
     train_full, test_full = train_test_split(full)
     train_med, test_med = train_test_split(med)
     train_low, test_low = train_test_split(low)
@@ -122,7 +88,7 @@ def generator_train(images, labels):
     labels_standardised, mean_, std_ = mean_std_norm(labels_angles)
     train_labels, test_labels = train_test_split(labels_standardised)
     model.fit_generator(multiinput_generator(train_full, train_med, train_low, train_labels),
-                        steps_per_epoch=32,
+                        steps_per_epoch=16,
                         epochs=50)
     return model, test_full, test_med, test_low, test_labels
 
@@ -147,25 +113,25 @@ def mean_std_norm(array):
     return standardized, mean_, std_
 
 
-def multires_CNN(filters, kernel_size, multires_data):
+def multires_CNN(filters, kernel_size, full, med low):
     '''uses Functional API for Keras 2.x support.
        multires data is output from load_standardized_multires()
     '''
-    input_fullres = Input(multires_data[0].shape[1:], name = 'input_fullres')
+    input_fullres = Input(full.shape[1:], name = 'input_fullres')
     fullres_branch = Conv2D(filters, (kernel_size, kernel_size),
                      activation = LeakyReLU())(input_fullres)
     fullres_branch = MaxPooling2D(pool_size = (2,2))(fullres_branch)
     fullres_branch = BatchNormalization()(fullres_branch)
     fullres_branch = Flatten()(fullres_branch)
 
-    input_medres = Input(multires_data[1].shape[1:], name = 'input_medres')
+    input_medres = Input(med.shape[1:], name = 'input_medres')
     medres_branch = Conv2D(filters, (kernel_size, kernel_size),
                      activation=LeakyReLU())(input_medres)
     medres_branch = MaxPooling2D(pool_size = (2,2))(medres_branch)
     medres_branch = BatchNormalization()(medres_branch)
     medres_branch = Flatten()(medres_branch)
 
-    input_lowres = Input(multires_data[2].shape[1:], name = 'input_lowres')
+    input_lowres = Input(low.shape[1:], name = 'input_lowres')
     lowres_branch = Conv2D(filters, (kernel_size, kernel_size),
                      activation = LeakyReLU())(input_lowres)
     lowres_branch = MaxPooling2D(pool_size = (2,2))(lowres_branch)
@@ -193,14 +159,16 @@ def train_model(train_files='hand-data',
     print('-----------------------')
 
     imagesio = StringIO(file_io.read_file_to_string(train_files+'/AllImages.npy'))
+    imagesio64 = StringIO(file_io.read_file_to_string(train_files+'/AllImages64.npy'))
+    imagesio32 = StringIO(file_io.read_file_to_string(train_files+'/AllImages32.npy'))
     labelsio = StringIO(file_io.read_file_to_string(train_files+'/AllAngles.npy'))
 
-    images = np.load(imagesio)
-    #labels_ = np.load(labelsio)
-    #labels = labels_[:500]
+    full = np.load(imagesio)
+    med = np.load(imagesio64)
+    low = np.load(imagesio32)
     labels = np.load(labelsio)
 
-    model, test_full, test_med, test_low, test_labels = generator_train(images, labels)
+    model, test_full, test_med, test_low, test_labels = generator_train(full, med, low, labels)
 
     error = calculate_error(model, test_full, test_med, test_low, test_labels)
     #file_stream_images = file_io.FileIO(train_files+'/AllImages.npy', mode='r')
