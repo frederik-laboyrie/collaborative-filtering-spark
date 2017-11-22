@@ -100,7 +100,7 @@ def calculate_error(model, test_full, test_med, test_low, test_labels, mean_, st
     mean_error_elevation = np.mean(abs(error[:, 0]))
     mean_error_zenith = np.mean(abs(error[:, 1]))
     print(mean_error_zenith)
-    print(mean_error_zenith)
+    print(mean_error_elevation)
     return mean_error_elevation, mean_error_zenith
 
 
@@ -122,11 +122,19 @@ def multires_CNN(filters, kernel_size, full, med, low):
                             activation=LeakyReLU())(input_fullres)
     fullres_branch = MaxPooling2D(pool_size=(2, 2))(fullres_branch)
     fullres_branch = BatchNormalization()(fullres_branch)
+    fullres_branch = Conv2D(filters, (kernel_size, kernel_size),
+                            activation=LeakyReLU())(fullres_branch)
+    fullres_branch = MaxPooling2D(pool_size=(2, 2))(fullres_branch)
+    fullres_branch = BatchNormalization()(fullres_branch)
     fullres_branch = Flatten()(fullres_branch)
 
     input_medres = Input(med.shape[1:], name='input_medres')
     medres_branch = Conv2D(filters, (kernel_size, kernel_size),
                            activation=LeakyReLU())(input_medres)
+    medres_branch = MaxPooling2D(pool_size=(2, 2))(medres_branch)
+    medres_branch = BatchNormalization()(medres_branch)
+    medres_branch = Conv2D(filters, (kernel_size, kernel_size),
+                           activation=LeakyReLU())(medres_branch)
     medres_branch = MaxPooling2D(pool_size=(2, 2))(medres_branch)
     medres_branch = BatchNormalization()(medres_branch)
     medres_branch = Flatten()(medres_branch)
@@ -136,10 +144,15 @@ def multires_CNN(filters, kernel_size, full, med, low):
                            activation=LeakyReLU())(input_lowres)
     lowres_branch = MaxPooling2D(pool_size=(2, 2))(lowres_branch)
     lowres_branch = BatchNormalization()(lowres_branch)
+    lowres_branch = Conv2D(filters, (kernel_size, kernel_size),
+                           activation=LeakyReLU())(lowres_branch)
+    lowres_branch = MaxPooling2D(pool_size=(2, 2))(lowres_branch)
+    lowres_branch = BatchNormalization()(lowres_branch)
     lowres_branch = Flatten()(lowres_branch)
 
     merged_branches = concatenate([fullres_branch, medres_branch, lowres_branch])
     merged_branches = Dense(128, activation=LeakyReLU())(merged_branches)
+    merged_branches = Dense(64, activation=LeakyReLU())(merged_branches)
     merged_branches = Dropout(0.5)(merged_branches)
     merged_branches = Dense(2, activation='linear')(merged_branches)
 
