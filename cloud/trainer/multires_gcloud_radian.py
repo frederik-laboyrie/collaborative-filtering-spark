@@ -74,11 +74,11 @@ def generator_train(full, med, low, labels):
        and tests angle loss
     '''
     full = [x.astype('float32') for x in full]
-    full = [x / 255 for x in full]
+    full = np.array([x / 255 for x in full])
     med = [x.astype('float32') for x in med]
-    med = [x / 255 for x in med]
+    med = np.array([x / 255 for x in med])
     low = [x.astype('float32') for x in low]
-    low = [x / 255 for x in low]
+    low = np.array([x / 255 for x in low])
     model = multires_CNN(16, 5, full, med, low)
     train_full, test_full = train_test_split(full)
     train_med, test_med = train_test_split(med)
@@ -164,8 +164,11 @@ def train_model(train_files='hand-data',
     labelsio = StringIO(file_io.read_file_to_string(train_files+'/AllAngles.npy'))
 
     full = np.load(imagesio)
+    full = np.reshape(full, [len(full), 128, 128, 3])
     med = np.load(imagesio64)
+    med = np.reshape(med, [len(med), 64, 64, 3])
     low = np.load(imagesio32)
+    low = np.reshape(low, [len(low), 32, 32, 3])
     labels = np.load(labelsio)
 
     model, test_full, test_med, test_low, test_labels, mean_, std_ = generator_train(full, med, low, labels)
