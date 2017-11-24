@@ -15,3 +15,4 @@ gcloud ml-engine jobs submit training $JOB_NAME \
   --train-files gs://hand-data \
   --kernel_size 5 \
   --filters 16
+  --top_neurons 128

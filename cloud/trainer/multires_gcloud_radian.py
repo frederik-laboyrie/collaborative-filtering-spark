@@ -33,7 +33,7 @@ def multiinput_generator(full, med, low, label):
                                      featurewise_std_normalization=False,  # divide inputs by std of the dataset
                                      samplewise_std_normalization=True,  # divide each input by its std
                                      zca_whitening=False)  # randomly flip images
-        batches = datagen.flow(full[idx], label[idx], batch_size=16, shuffle=False)
+        batches = datagen.flow(full[idx], label[idx], batch_size=8, shuffle=False)
         idx0 = 0
         for batch in batches:
             idx1 = idx0 + batch[0].shape[0]
@@ -68,7 +68,7 @@ def reverse_mean_std(standardized_array, prev_mean, prev_std):
     return de_mean
 
 
-def generator_train(full, med, low, labels, kernel_size, filters):
+def generator_train(full, med, low, labels, kernel_size, filters, top_neurons):
     '''main entry point
        calls customised  multiinput generator
        and tests angle loss
@@ -79,7 +79,7 @@ def generator_train(full, med, low, labels, kernel_size, filters):
     med = np.array([x / 255 for x in med])
     low = [x.astype('float32') for x in low]
     low = np.array([x / 255 for x in low])
-    model = multires_CNN(filters, kernel_size, full, med, low)
+    model = multires_CNN(filters, kernel_size, top_neurons, full, med, low)
     train_full, test_full = train_test_split(full)
     train_med, test_med = train_test_split(med)
     train_low, test_low = train_test_split(low)
@@ -93,14 +93,24 @@ def generator_train(full, med, low, labels, kernel_size, filters):
     return model, test_full, test_med, test_low, test_labels, mean_, std_
 
 
-def calculate_error(model, test_full, test_med, test_low, test_labels, mean_, std_):
+def calculate_error(model, test_full, test_med, test_low, test_labels, mean_, std_, kernel_size, filters, top_neurons):
     std_angles = model.predict([test_full, test_med, test_low])
     unstd_angles = reverse_mean_std(std_angles, mean_, std_)
     error = unstd_angles - test_labels
     mean_error_elevation = np.mean(abs(error[:, 0]))
     mean_error_zenith = np.mean(abs(error[:, 1]))
-    print(mean_error_zenith)
-    print(mean_error_elevation)
+    print('\n' * 10)
+    print('kernel size: {}'.format(kernel_size))
+    print('filters: {}'.format(filters))
+    print('zenith: {}'.format(mean_error_zenith))
+    print('elevation: {}'.format(mean_error_elevation))
+    print('\n' * 10)
+    with open("hand-data/results.txt", "a") as text_file:
+        text_file.write("VANILLA: kernel_size: {}, filters: {}, elevation: {}, zenith: {}, top_neurons: {} \n".format(kernel_size,
+                                                                                                                      filters,
+                                                                                                                      mean_error_elevation,
+                                                                                                                      mean_error_zenith,
+                                                                                                                      top_neurons))
     return mean_error_elevation, mean_error_zenith
 
 
@@ -113,7 +123,7 @@ def mean_std_norm(array):
     return standardized, mean_, std_
 
 
-def multires_CNN(filters, kernel_size, full, med, low):
+def multires_CNN(filters, kernel_size, top_neurons, full, med, low):
     '''uses Functional API for Keras 2.x support.
        multires data is output from load_standardized_multires()
     '''
@@ -151,8 +161,8 @@ def multires_CNN(filters, kernel_size, full, med, low):
     lowres_branch = Flatten()(lowres_branch)
 
     merged_branches = concatenate([fullres_branch, medres_branch, lowres_branch])
-    merged_branches = Dense(128, activation=LeakyReLU())(merged_branches)
-    merged_branches = Dense(64, activation=LeakyReLU())(merged_branches)
+    merged_branches = Dense(top_neurons, activation=LeakyReLU())(merged_branches)
+    merged_branches = Dense(int(top_neurons/2), activation=LeakyReLU())(merged_branches)
     merged_branches = Dropout(0.5)(merged_branches)
     merged_branches = Dense(2, activation='linear')(merged_branches)
 
@@ -163,7 +173,7 @@ def multires_CNN(filters, kernel_size, full, med, low):
     return model
 
 
-def train_model(train_files='hand-data', job_dir='./tmp/test1', kernel_size=5, filters=16, **args):
+def train_model(train_files='hand-data', job_dir='./tmp/test1', kernel_size=5, filters=16, top_neurons=128, **args):
     logs_path = job_dir + '/logs/' + datetime.now().isoformat()
     print('-----------------------')
     print('Using train_file located at {}'.format(train_files))
@@ -176,6 +186,7 @@ def train_model(train_files='hand-data', job_dir='./tmp/test1', kernel_size=5, f
     print(args)
     kernel_size = int(kernel_size)
     filters = int(filters)
+    top_neurons = int(top_neurons)
     # wrong names for now.....
     imagesio = StringIO(file_io.read_file_to_string(train_files+'/AllImages.npy'))
     imagesio64 = StringIO(file_io.read_file_to_string(train_files+'/AllAngles64.npy'))
@@ -195,9 +206,11 @@ def train_model(train_files='hand-data', job_dir='./tmp/test1', kernel_size=5, f
                                                                                      low,
                                                                                      labels,
                                                                                      kernel_size,
-                                                                                     filters)
+                                                                                     filters,
+                                                                                     top_neurons)
 
-    error = calculate_error(model, test_full, test_med, test_low, test_labels, mean_, std_)
+    error = calculate_error(model, test_full, test_med, test_low, test_labels,
+                            mean_, std_, kernel_size, filters, top_neurons)
     # file_stream_images = file_io.FileIO(train_files+'/AllImages.npy', mode='r')
     # file_stream_labels = file_io.FileIO(train_files+'/AllAngles.npy', mode='r')
     # images = np.load(file_stream_images)
@@ -218,6 +231,9 @@ if __name__ == '__main__':
                         help='param for cnn')
 
     parser.add_argument('--filters',
+                        help='param for cnn')
+
+    parser.add_argument('--top_neurons',
                         help='param for cnn')
     args = parser.parse_args()
     arguments = args.__dict__
