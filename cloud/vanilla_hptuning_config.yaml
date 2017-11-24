@@ -1,0 +1,17 @@
+trainingInput:
+  hyperparameters:
+    goal: MAXIMIZE
+    hyperparameterMetricTag: accuracy
+    maxTrials: 4
+    maxParallelTrials: 2
+    params:
+      - parameterName: kernel_size
+        type: INTEGER
+        minValue: 3
+        maxValue: 9
+        scaleType: UNIT_REVERSE_LOG_SCALE
+      - parameterName: filters
+        type: INTEGER
+        minValue: 3
+        maxValue: 25
+        scaleType: UNIT_REVERSE_LOG_SCALE

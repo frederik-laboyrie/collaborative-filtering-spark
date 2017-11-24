@@ -68,7 +68,7 @@ def reverse_mean_std(standardized_array, prev_mean, prev_std):
     return de_mean
 
 
-def generator_train(full, med, low, labels):
+def generator_train(full, med, low, labels, kernel_size, filters):
     '''main entry point
        calls customised  multiinput generator
        and tests angle loss
@@ -79,7 +79,7 @@ def generator_train(full, med, low, labels):
     med = np.array([x / 255 for x in med])
     low = [x.astype('float32') for x in low]
     low = np.array([x / 255 for x in low])
-    model = multires_CNN(16, 5, full, med, low)
+    model = multires_CNN(filters, kernel_size, full, med, low)
     train_full, test_full = train_test_split(full)
     train_med, test_med = train_test_split(med)
     train_low, test_low = train_test_split(low)
@@ -163,13 +163,19 @@ def multires_CNN(filters, kernel_size, full, med, low):
     return model
 
 
-def train_model(train_files='hand-data',
-                job_dir='./tmp/test1', **args):
+def train_model(train_files='hand-data', job_dir='./tmp/test1', kernel_size=5, filters=16, **args):
     logs_path = job_dir + '/logs/' + datetime.now().isoformat()
     print('-----------------------')
     print('Using train_file located at {}'.format(train_files))
     print('Using logs_path located at {}'.format(logs_path))
     print('-----------------------')
+    print('-----------------------')
+    print('-----------------------')
+    print('-----------------------')
+    print('-----------------------')
+    print(args)
+    kernel_size = int(kernel_size)
+    filters = int(filters)
     # wrong names for now.....
     imagesio = StringIO(file_io.read_file_to_string(train_files+'/AllImages.npy'))
     imagesio64 = StringIO(file_io.read_file_to_string(train_files+'/AllAngles64.npy'))
@@ -184,7 +190,12 @@ def train_model(train_files='hand-data',
     low = np.reshape(low, [len(low), 32, 32, 3])
     labels = np.load(labelsio)
 
-    model, test_full, test_med, test_low, test_labels, mean_, std_ = generator_train(full, med, low, labels)
+    model, test_full, test_med, test_low, test_labels, mean_, std_ = generator_train(full,
+                                                                                     med,
+                                                                                     low,
+                                                                                     labels,
+                                                                                     kernel_size,
+                                                                                     filters)
 
     error = calculate_error(model, test_full, test_med, test_low, test_labels, mean_, std_)
     # file_stream_images = file_io.FileIO(train_files+'/AllImages.npy', mode='r')
@@ -199,13 +210,16 @@ if __name__ == '__main__':
                         help='GCS or local paths to training data',
                         required=True)
 
-    #parser.add_argument('--train-labels',
-    #                    help='GCS or local paths to training labels',
-    #                    required=True)
-
     parser.add_argument('--job-dir',
                         help='GCS location to write checkpoints and export models',
                         required=True)
+
+    parser.add_argument('--kernel_size',
+                        help='param for cnn')
+
+    parser.add_argument('--filters',
+                        help='param for cnn')
     args = parser.parse_args()
     arguments = args.__dict__
+    print(arguments)
     train_model(**arguments)
