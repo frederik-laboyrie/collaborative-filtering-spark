@@ -105,7 +105,8 @@ def calculate_error(model, test_full, test_med, test_low, test_labels, mean_, st
     print('zenith: {}'.format(mean_error_zenith))
     print('elevation: {}'.format(mean_error_elevation))
     print('\n' * 10)
-    with open("hand-data/results.txt", "a") as text_file:
+    write_path = StringIO(file_io.read_file_to_string("hand-data/results.txt"))
+    with open(write_path, "a") as text_file:
         text_file.write("VANILLA: kernel_size: {}, filters: {}, elevation: {}, zenith: {}, top_neurons: {} \n".format(kernel_size,
                                                                                                                       filters,
                                                                                                                       mean_error_elevation,
