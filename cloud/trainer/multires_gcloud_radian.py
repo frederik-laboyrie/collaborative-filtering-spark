@@ -20,6 +20,8 @@ from datetime import datetime  # for filename conventions
 from tensorflow.python.lib.io import file_io  # for better file I/O
 
 
+
+
 def multiinput_generator(full, med, low, label):
     '''custom generator to be passed to main training
        note samplewise std normalization + batch size
@@ -93,7 +95,7 @@ def generator_train(full, med, low, labels, kernel_size, filters, top_neurons):
     return model, test_full, test_med, test_low, test_labels, mean_, std_
 
 
-def calculate_error(model, test_full, test_med, test_low, test_labels, mean_, std_, kernel_size, filters, top_neurons):
+def calculate_error(model, test_full, test_med, test_low, test_labels, mean_, std_, kernel_size, filters, top_neurons, train_files):
     std_angles = model.predict([test_full, test_med, test_low])
     unstd_angles = reverse_mean_std(std_angles, mean_, std_)
     error = unstd_angles - test_labels
@@ -105,13 +107,15 @@ def calculate_error(model, test_full, test_med, test_low, test_labels, mean_, st
     print('zenith: {}'.format(mean_error_zenith))
     print('elevation: {}'.format(mean_error_elevation))
     print('\n' * 10)
-    write_path = StringIO(file_io.read_file_to_string("hand-data/results.txt"))
-    with open(write_path, "a") as text_file:
-        text_file.write("VANILLA: kernel_size: {}, filters: {}, elevation: {}, zenith: {}, top_neurons: {} \n".format(kernel_size,
-                                                                                                                      filters,
-                                                                                                                      mean_error_elevation,
-                                                                                                                      mean_error_zenith,
-                                                                                                                      top_neurons))
+    file_content = "VANILLA: kernel_size: {}, filters: {}, elevation: {}, zenith: {}, top_neurons: {} \n".format(kernel_size,
+                                                                                                                 filters,
+                                                                                                                 mean_error_elevation,
+                                                                                                                 mean_error_zenith,
+                                                                                                                 top_neurons)
+    #file_io.FileIO.write_string_to_file(train_files + '/results.txt', file_content)
+    with file_io.FileIO(train_files + '/results.txt', mode="a") as f:
+        f.write(file_content)
+
     return mean_error_elevation, mean_error_zenith
 
 
@@ -211,7 +215,7 @@ def train_model(train_files='hand-data', job_dir='./tmp/test1', kernel_size=5, f
                                                                                      top_neurons)
 
     error = calculate_error(model, test_full, test_med, test_low, test_labels,
-                            mean_, std_, kernel_size, filters, top_neurons)
+                            mean_, std_, kernel_size, filters, top_neurons, train_files)
     # file_stream_images = file_io.FileIO(train_files+'/AllImages.npy', mode='r')
     # file_stream_labels = file_io.FileIO(train_files+'/AllAngles.npy', mode='r')
     # images = np.load(file_stream_images)
