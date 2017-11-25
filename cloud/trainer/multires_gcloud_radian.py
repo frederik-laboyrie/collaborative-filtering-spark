@@ -20,8 +20,6 @@ from datetime import datetime  # for filename conventions
 from tensorflow.python.lib.io import file_io  # for better file I/O
 
 
-
-
 def multiinput_generator(full, med, low, label):
     '''custom generator to be passed to main training
        note samplewise std normalization + batch size
@@ -70,7 +68,7 @@ def reverse_mean_std(standardized_array, prev_mean, prev_std):
     return de_mean
 
 
-def generator_train(full, med, low, labels, kernel_size, filters, top_neurons):
+def generator_train(full, med, low, labels, kernel_size, filters, top_neurons, dropout):
     '''main entry point
        calls customised  multiinput generator
        and tests angle loss
@@ -81,7 +79,7 @@ def generator_train(full, med, low, labels, kernel_size, filters, top_neurons):
     med = np.array([x / 255 for x in med])
     low = [x.astype('float32') for x in low]
     low = np.array([x / 255 for x in low])
-    model = multires_CNN(filters, kernel_size, top_neurons, full, med, low)
+    model = multires_CNN(filters, kernel_size, top_neurons, dropout, full, med, low)
     train_full, test_full = train_test_split(full)
     train_med, test_med = train_test_split(med)
     train_low, test_low = train_test_split(low)
@@ -95,7 +93,8 @@ def generator_train(full, med, low, labels, kernel_size, filters, top_neurons):
     return model, test_full, test_med, test_low, test_labels, mean_, std_
 
 
-def calculate_error(model, test_full, test_med, test_low, test_labels, mean_, std_, kernel_size, filters, top_neurons, train_files):
+def calculate_error(model, test_full, test_med, test_low, test_labels, mean_, std_,
+                    kernel_size, filters, top_neurons, dropout, train_files):
     std_angles = model.predict([test_full, test_med, test_low])
     unstd_angles = reverse_mean_std(std_angles, mean_, std_)
     error = unstd_angles - test_labels
@@ -107,12 +106,16 @@ def calculate_error(model, test_full, test_med, test_low, test_labels, mean_, st
     print('zenith: {}'.format(mean_error_zenith))
     print('elevation: {}'.format(mean_error_elevation))
     print('\n' * 10)
-    file_content = "VANILLA: kernel_size: {}, filters: {}, elevation: {}, zenith: {}, top_neurons: {} \n".format(kernel_size,
-                                                                                                                 filters,
-                                                                                                                 mean_error_elevation,
-                                                                                                                 mean_error_zenith,
-                                                                                                                 top_neurons)
-    #file_io.FileIO.write_string_to_file(train_files + '/results.txt', file_content)
+    file_content = """VANILLA double layer not batch norm + he everywhere + 
+                      no low res pooling: kernel_size: {}, filters: {}, 
+                      elevation: {}, zenith: {}, top_neurons: {},
+                      dropout_both_layers: {} \n""".format(kernel_size,
+                                                           filters,
+                                                           mean_error_elevation,
+                                                           mean_error_zenith,
+                                                           top_neurons,
+                                                           dropout)
+
     with file_io.FileIO(train_files + '/results.txt', mode="a") as f:
         f.write(file_content)
 
@@ -128,47 +131,60 @@ def mean_std_norm(array):
     return standardized, mean_, std_
 
 
-def multires_CNN(filters, kernel_size, top_neurons, full, med, low):
+def multires_CNN(filters, kernel_size, top_neurons, dropout, full, med, low):
     '''uses Functional API for Keras 2.x support.
        multires data is output from load_standardized_multires()
     '''
     input_fullres = Input(full.shape[1:], name='input_fullres')
     fullres_branch = Conv2D(filters, (kernel_size, kernel_size),
-                            activation=LeakyReLU())(input_fullres)
+                            activation=LeakyReLU(), kernel_initializer='he_normal')(input_fullres)
     fullres_branch = MaxPooling2D(pool_size=(2, 2))(fullres_branch)
-    fullres_branch = BatchNormalization()(fullres_branch)
+    #fullres_branch = BatchNormalization()(fullres_branch)
+    #fullres_branch = Conv2D(filters, (kernel_size, kernel_size),
+    #                       activation=LeakyReLU())(fullres_branch)
+    #fullres_branch = MaxPooling2D(pool_size=(2, 2))(fullres_branch)
+    #fullres_branch = BatchNormalization()(fullres_branch)
     fullres_branch = Conv2D(filters, (kernel_size, kernel_size),
-                            activation=LeakyReLU())(fullres_branch)
+                            activation=LeakyReLU(), kernel_initializer='he_normal')(fullres_branch)
     fullres_branch = MaxPooling2D(pool_size=(2, 2))(fullres_branch)
-    fullres_branch = BatchNormalization()(fullres_branch)
+    #fullres_branch = BatchNormalization()(fullres_branch)
     fullres_branch = Flatten()(fullres_branch)
 
     input_medres = Input(med.shape[1:], name='input_medres')
     medres_branch = Conv2D(filters, (kernel_size, kernel_size),
-                           activation=LeakyReLU())(input_medres)
+                           activation=LeakyReLU(), kernel_initializer='he_normal')(input_medres)
     medres_branch = MaxPooling2D(pool_size=(2, 2))(medres_branch)
-    medres_branch = BatchNormalization()(medres_branch)
+    #medres_branch = BatchNormalization()(medres_branch)
+    #medres_branch = Conv2D(filters, (kernel_size, kernel_size),
+    #                       activation=LeakyReLU())(medres_branch)
+    #medres_branch = MaxPooling2D(pool_size=(2, 2))(medres_branch)
+    #medres_branch = BatchNormalization()(medres_branch)
     medres_branch = Conv2D(filters, (kernel_size, kernel_size),
-                           activation=LeakyReLU())(medres_branch)
+                           activation=LeakyReLU(), kernel_initializer='he_normal')(medres_branch)
     medres_branch = MaxPooling2D(pool_size=(2, 2))(medres_branch)
-    medres_branch = BatchNormalization()(medres_branch)
+    #medres_branch = BatchNormalization()(medres_branch)
     medres_branch = Flatten()(medres_branch)
 
     input_lowres = Input(low.shape[1:], name='input_lowres')
     lowres_branch = Conv2D(filters, (kernel_size, kernel_size),
-                           activation=LeakyReLU())(input_lowres)
-    lowres_branch = MaxPooling2D(pool_size=(2, 2))(lowres_branch)
-    lowres_branch = BatchNormalization()(lowres_branch)
+                           activation=LeakyReLU(), kernel_initializer='he_normal')(input_lowres)
+    #lowres_branch = MaxPooling2D(pool_size=(2, 2))(lowres_branch)
+    #lowres_branch = BatchNormalization()(lowres_branch)
+    #lowres_branch = Conv2D(filters, (kernel_size, kernel_size),
+    #                       activation=LeakyReLU())(lowres_branch)
+    #lowres_branch = MaxPooling2D(pool_size=(2, 2))(lowres_branch)
+    #lowres_branch = BatchNormalization()(lowres_branch)
     lowres_branch = Conv2D(filters, (kernel_size, kernel_size),
-                           activation=LeakyReLU())(lowres_branch)
-    lowres_branch = MaxPooling2D(pool_size=(2, 2))(lowres_branch)
-    lowres_branch = BatchNormalization()(lowres_branch)
+                           activation=LeakyReLU(), kernel_initializer='he_normal')(lowres_branch)
+    #lowres_branch = MaxPooling2D(pool_size=(2, 2))(lowres_branch)
+    #lowres_branch = BatchNormalization()(lowres_branch)
     lowres_branch = Flatten()(lowres_branch)
 
     merged_branches = concatenate([fullres_branch, medres_branch, lowres_branch])
-    merged_branches = Dense(top_neurons, activation=LeakyReLU())(merged_branches)
-    merged_branches = Dense(int(top_neurons/2), activation=LeakyReLU())(merged_branches)
-    merged_branches = Dropout(0.5)(merged_branches)
+    merged_branches = Dense(top_neurons, activation=LeakyReLU(), kernel_initializer='he_normal')(merged_branches)
+    merged_branches = Dropout(dropout)(merged_branches)
+    merged_branches = Dense(int(top_neurons/2), activation=LeakyReLU(), kernel_initializer='he_normal')(merged_branches)
+    merged_branches = Dropout(dropout)(merged_branches)
     merged_branches = Dense(2, activation='linear')(merged_branches)
 
     model = Model(inputs=[input_fullres, input_medres, input_lowres],
@@ -178,7 +194,10 @@ def multires_CNN(filters, kernel_size, top_neurons, full, med, low):
     return model
 
 
-def train_model(train_files='hand-data', job_dir='./tmp/test1', kernel_size=5, filters=16, top_neurons=128, **args):
+def train_model(train_files='hand-data', job_dir='./tmp/test1', kernel_size=5,
+                filters=16, top_neurons=128, dropout=0.5, **args):
+    """ main entry point for processing args and training model
+    """
     logs_path = job_dir + '/logs/' + datetime.now().isoformat()
     print('-----------------------')
     print('Using train_file located at {}'.format(train_files))
@@ -189,9 +208,12 @@ def train_model(train_files='hand-data', job_dir='./tmp/test1', kernel_size=5, f
     print('-----------------------')
     print('-----------------------')
     print(args)
+
     kernel_size = int(kernel_size)
     filters = int(filters)
     top_neurons = int(top_neurons)
+    dropout = float(dropout)
+
     # wrong names for now.....
     imagesio = StringIO(file_io.read_file_to_string(train_files+'/AllImages.npy'))
     imagesio64 = StringIO(file_io.read_file_to_string(train_files+'/AllAngles64.npy'))
@@ -212,14 +234,12 @@ def train_model(train_files='hand-data', job_dir='./tmp/test1', kernel_size=5, f
                                                                                      labels,
                                                                                      kernel_size,
                                                                                      filters,
-                                                                                     top_neurons)
+                                                                                     top_neurons,
+                                                                                     dropout)
 
     error = calculate_error(model, test_full, test_med, test_low, test_labels,
-                            mean_, std_, kernel_size, filters, top_neurons, train_files)
-    # file_stream_images = file_io.FileIO(train_files+'/AllImages.npy', mode='r')
-    # file_stream_labels = file_io.FileIO(train_files+'/AllAngles.npy', mode='r')
-    # images = np.load(file_stream_images)
-    # labels = np.load(file_stream_labels)
+                            mean_, std_, kernel_size, filters, top_neurons,
+                            dropout, train_files)
 
 
 if __name__ == '__main__':
@@ -240,6 +260,10 @@ if __name__ == '__main__':
 
     parser.add_argument('--top_neurons',
                         help='param for cnn')
+
+    parser.add_argument('--dropout',
+                        help='param for cnn')
+
     args = parser.parse_args()
     arguments = args.__dict__
     print(arguments)
