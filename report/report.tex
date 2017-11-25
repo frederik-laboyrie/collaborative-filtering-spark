@@ -69,7 +69,7 @@ Generative adversarial data augmentation techniques can produce a much wider ran
 Using these techniques large improvements were achieved on several eye direction and hand pose datasets using the refined syntheitcs images compared to the original datasets. MPIIGaze showed a 22.3\% improvement in accuracy using the refined synthetic images compared to the original dataset. [21] does not implement the customized pipelines that achieve state-of-the-art for NYU Hand Pose dataset, just a vanilla CNN, but are able to achieve 8.8\% improvement in accuracy using the refined synthetic images.\\
 
  
-
+is this a copy? add comment on why you are not using this i.e. because it is just well documented gain. 
 SimGAN, the technique developed in [21] generates images adversarially in the first stage until the images fool the adversarial network and then they are refined  in a refiner network. Self-regularization and local adversarial loss enable much more accurate or life-like as the smaller receptive fields help avoid drift and prevent artifacts form occuring. State-of-the-art is achieved on MPIIGaze with 22.3\% improvement in accuracy using the refined synthetic images compared to the original dataset. [21] do not implement the customized pipelines that achieve state-of-the-art for NYU Hand Pose dataset, just a vanilla CNN, but are able to achieve 8.8\% improvement in accuracy using the refined synthetic images.\\
 
 These results are not unique to hand pose and eye direction datasets and were recently shown in [30] to achieve between 2-14\% on a variety of benchmark datasets. Their architecture, called DAGAN presents both the true image and the images that are generated from it to the discriminator. In this way, the adversarial network can be encouraged to produce images that vary from the true image and does not simply try to create a replica behaving like an autoencoder (VAE).\\
@@ -205,16 +205,42 @@ RANSAC is well suited to this task as it takes a random sample of points in each
 In [1] a painting game was also developed during the data collection process, where a user is given feedback showing how much of the orientation space they have managed to fill with sufficient samples. This was in response to earlier datasets which had inconsistencies and gaps in orientation space as users failed to provide sufficient examples for the entirety of orientation space. This then provides a consistent and balanced dataset already from the collection phase and does not require and post-processing to balance the dataset.
 
 
-
-
-
-
-
  pruning
 ***Notes
 number of mult-adds not equal to performance i.e. irregular sparsity creates bottlenecks and it doesn't help. so random pruning helps but is largely for model size. less reg, less data aug -> small models don't have problems with overfitting as much.
 
+\subsection*{Training Pipeline Configuration}
+To streamline the training pipeline all image resizing was performed locally beforehand and the various resolutions were then stored on cloud. This had to be performed in batches to avoid generating a graph of over TensorFlow's 2GB limit, as the resizing was done using TensorFlow's preprocessing module. \\
 
+This leaves only an input generator, which simultaneously performs samplewise standard deviation normalisation, along with the actual training of the model in the pipeline.
+The input generator is vital for memory management, as without controlling the input generator's batch size to be sufficiently small, the GPU can run out of memory and the training process is killed. In fact, the entire training process was extremely sensitive and it was necessary to decrease what was a stable batch size just to accomodate slightly larger models or models which did not use pooling. \\
+
+The training pipeline was configured in such a way that ranges of hyperparameters are provided automatically by a hyperparameter configuration file where the ranges are specified. Then multiple parallel trials could take place on cloud. Results of these parallel trials are used in the Bayesian hyperparameter optimisation to choose which value within the range to explore most over a maximum number of trials that is specified. \\
+
+The same hyperparameter optimisation strategy was used for a variety of structural experiments. That is the hyperparameters and structure were not optimized simultaneously but rather in multiple parallel trials. Some structures provided extremely poor, even divergent, solutions and it was much easier to understand what structural characteristics were causing this by separating structure optimization from hyperparameter optimization.\\
+
+A particular good example of this is that due to the small batch size required to manage memory, regularization techniques such as layer-wise batch normalization were very unstable as the normalization was being performed on feature maps of very few samples (8 or fewer). In fact, some hyperparameters showed extreme variance in test error, showing errors between 5 degrees to 50 degrees just by randomizing the order in wich the images were passed into the model. \\
+
+By removing layer-wise batch normalization the model showed strong stability and low test error variance over a variety of hyperparameters and is discussed more in depth in results.  But it is still worth highlighting how the training pipeline configuration influenced the structure of the model. \\
+
+\subsection*{Methodology}
+The methodology used in this work was to choose a suitable range for a number of hyperparameters that were applicable to each model. For instance, SqueezeNets have several hyperparameters that do not apply to standard CNNs, so it is not possible to have a consistent set of hyperparameters that are optimized over all  models. \\
+
+Each unique set of hyperparameter ranges is then applied separately to several different structures for each model. For example, for the vanilla CNN suitable ranges for kernel size, number of filters, number of neurons in the fully-connected layers and dropout were chosen. This hyperparameter set was then used to calculate performance for structural choices such as how many layers were used in the convolutional parts of the network or whether to include pooling layers. \\
+
+A maximum number of trials was set at 32 for each structural choice and then the Bayesian hyperparameter optimisation framework would select the appropriate hyperparameters to calculate performance for in order to optimise accuracy. \\
+
+As cross-validation is not used, but rather a simple train-test split, in order to estimate generalization error the average error for the top 16 performing network hyperparameter configurations is used to define the accuracy for a given structure. This of course has the advantage of seeing how stable a model is over hyperparameter space at the loss of seeing how stable a model is on being trained on different subsets of the data.\\
+
+Although the dataset was fairly small, it is completely justified not to increase training cost by 5-10x (assuming 5-10 folds). In the end, this would only confirm that one particular set of hyperparameters is likely to generalise the best. If a model is stable of hyperparameter space then this is irrelevant and if the models were to be retrained using additional data then it is more desirable to have a network structure which is likely to be able to sustain high performance, rather than be in need of further extensive hyperparameter optimization.\\
+
+
+\subsection*{Results}
+Strong results were achieved with the vanilla CNN using standard convolutions, with errors typically ranging between 3 and 7 degrees for both azimuth and elevation angles. This is a significant improvement on the 12 degrees average error achieve by the ML-RF techniques in [17]. \\
+
+These strong results exist in a large part of hyperparameter space and a largely driven by structural aspect of the network. Not using layer-wise batch normalization provided the first major improvements, as the normalization was unstable due to the small batch size required by the input generator for memory management. In fact, some configurations diverged to produce errors of over 180 degrees.\\
+
+Surprisingly, using pooling which intuitively was a poor choice due to loss in spatial information. This loss in spatial information was however limited due to the small kernel sizes which achieved these results. However, the there was no discernible difference in performance when pooling layers were removed from the low resolution part of the network, where the kernels were largest relative to the size of the image. \\
 
 \subsection*{References}
 \begin{enumerate}
