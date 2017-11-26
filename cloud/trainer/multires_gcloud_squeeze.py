@@ -34,7 +34,7 @@ def multiinput_generator(full, med, low, label):
                                      featurewise_std_normalization=False,  # divide inputs by std of the dataset
                                      samplewise_std_normalization=True,  # divide each input by its std
                                      zca_whitening=False)  # randomly flip images
-        batches = datagen.flow(full[idx], label[idx], batch_size=8, shuffle=False)
+        batches = datagen.flow(full[idx], label[idx], batch_size=1, shuffle=False)
         idx0 = 0
         for batch in batches:
             idx1 = idx0 + batch[0].shape[0]
@@ -70,7 +70,7 @@ def reverse_mean_std(standardized_array, prev_mean, prev_std):
 
 
 def generator_train(full, med, low, labels, kernel_size, filters, top_neurons,
-                    dropout, squeeze_param, bottleneck, leaky=True):
+                    dropout, squeeze_param, bottleneck, squeeze_ratio, pct_3x3, leaky=True):
     '''main entry point
        calls customised  multiinput generator
        and tests angle loss
@@ -84,7 +84,8 @@ def generator_train(full, med, low, labels, kernel_size, filters, top_neurons,
 
     model = multires_squeezenet(full, med, low, leaky, filters,
                                 kernel_size, top_neurons, dropout,
-                                squeeze_param, bottleneck)
+                                squeeze_param, bottleneck, squeeze_ratio,
+                                pct_3x3)
 
     train_full, test_full = train_test_split(full)
     train_med, test_med = train_test_split(med)
@@ -103,7 +104,8 @@ def generator_train(full, med, low, labels, kernel_size, filters, top_neurons,
 
 
 def calculate_error(model, test_full, test_med, test_low, test_labels, mean_, std_,
-                    kernel_size, filters, top_neurons, dropout, squeeze_param, bottleneck, train_files):
+                    kernel_size, filters, top_neurons, dropout, squeeze_param, 
+                    bottleneck, squeeze_ratio, pct_3x3, train_files):
     std_angles = model.predict([test_full, test_med, test_low])
     unstd_angles = reverse_mean_std(std_angles, mean_, std_)
     error = unstd_angles - test_labels
@@ -115,19 +117,22 @@ def calculate_error(model, test_full, test_med, test_low, test_labels, mean_, st
     print('zenith: {}'.format(mean_error_zenith))
     print('elevation: {}'.format(mean_error_elevation))
     print('\n' * 10)
-    file_content = """no pool SQUEEZE: kernel_size: {}, filters: {}, 
+    file_content = """hi res pool SQUEEZE, expansion 2 , 4 fire modules, stride 1: kernel_size: {}, filters: {}, 
                       elevation: {}, zenith: {}, top_neurons: {},
                       dropout_both_layers: {}, squeeze_param: {}, 
-                      bottleneck: {} \n""".format(kernel_size,
+                      bottleneck: {}, squeeze_ratio: {},
+                      pct_3x3: {} \n""".format(kernel_size,
                                                   filters,
                                                   mean_error_elevation,
                                                   mean_error_zenith,
                                                   top_neurons,
                                                   dropout,
                                                   squeeze_param,
-                                                  bottleneck)
+                                                  bottleneck,
+                                                  squeeze_ratio,
+                                                  pct_3x3)
 
-    with file_io.FileIO(train_files + '/results.txt', mode="a") as f:
+    with file_io.FileIO(train_files + '/squeezeresults.txt', mode="a") as f:
         f.write(file_content)
 
     return mean_error_elevation, mean_error_zenith
@@ -142,13 +147,14 @@ def mean_std_norm(array):
     return standardized, mean_, std_
 
 
-def fire_module(x, fire_id, leaky, res, squeeze_param=16, expand_param=64,
+def fire_module(x, fire_id, leaky, res, squeeze_param=16, squeeze_ratio=0.125, pct_3x3=0.5,
                 sq1x1="squeeze1x1", exp1x1="expand1x1", exp3x3="expand3x3"):
     '''implementation of fire module as in
        SqueezeNet paper consisting of squeeze
        and expand phases. x represents input
        from previous layer.
     '''
+    expand_param = int((squeeze_ratio * pct_3x3) / (1 - pct_3x3))
     if leaky:
         relu_type = LeakyReLU()
         relu_name = 'leaky'
@@ -161,7 +167,7 @@ def fire_module(x, fire_id, leaky, res, squeeze_param=16, expand_param=64,
     x = Conv2D(squeeze_param, (1, 1), padding='valid', name=s_id + sq1x1 + res)(x)
     x = Activation(relu_type, name=str(s_id) + str(relu_name) + sq1x1 + res)(x)
 
-    left = Conv2D(expand_param, (1, 1), padding='valid', name=s_id + exp1x1 + res)(x)
+    left = Conv2D(int(squeeze_param/squeeze_ratio), (1, 1), padding='valid', name=s_id + exp1x1 + res)(x)
     left = Activation(relu_type, name=str(s_id) + str(relu_name) + exp1x1 + res)(left)
 
     right = Conv2D(expand_param, (3, 3), padding='same', name=s_id + exp3x3 + res)(x)
@@ -170,7 +176,7 @@ def fire_module(x, fire_id, leaky, res, squeeze_param=16, expand_param=64,
     x = concatenate([left, right], name=str(s_id) + str(relu_name) + 'concat' + res)
     return x
 
-def squeezenet(data, leaky, exclude_top, res, squeeze_param, filters, kernel_size, bottleneck):
+def squeezenet(data, leaky, exclude_top, res, squeeze_param, filters, kernel_size, bottleneck, squeeze_ratio, pct_3x3 ,pooling):
     '''squeezenet implementation
        with structure as in original
        paper. note bottleneck replaces
@@ -182,22 +188,28 @@ def squeezenet(data, leaky, exclude_top, res, squeeze_param, filters, kernel_siz
     else:
         input = Input(shape=data.shape[1:])
 
-    x = Conv2D(filters, (kernel_size, kernel_size), strides=(2, 2), padding='valid', name='conv1' + res)(input)
+    x = Conv2D(filters, (kernel_size, kernel_size), strides=(1, 1), padding='valid', name='conv1' + res)(input)
     x = Activation(LeakyReLU(), name='relu_conv1' + res)(x)
-    #x = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), name='pool1' + res)(x)
 
-    x = fire_module(x, fire_id=2, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*4)
-    x = fire_module(x, fire_id=3, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*4)
-    #x = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), name='pool3' + res)(x)
+    if pooling:
+        x = MaxPooling2D(pool_size=(2, 2), strides=(1, 1), name='pool1' + res)(x)
 
-    x = fire_module(x, fire_id=4, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*4)
-    x = fire_module(x, fire_id=5, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*4)
-    #x = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), name='pool5' + res)(x)
+    x = fire_module(x, fire_id=2, leaky=leaky, res=res, squeeze_param=int(squeeze_param), squeeze_ratio=float(squeeze_ratio), pct_3x3=float(pct_3x3))
+    x = fire_module(x, fire_id=3, leaky=leaky, res=res, squeeze_param=int(squeeze_param), squeeze_ratio=float(squeeze_ratio), pct_3x3=float(pct_3x3))
 
-    x = fire_module(x, fire_id=6, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*4)
-    x = fire_module(x, fire_id=7, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*4)
-    x = fire_module(x, fire_id=8, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*4)
-    x = fire_module(x, fire_id=9, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*4)
+    if pooling:
+        x = MaxPooling2D(pool_size=(2, 2), strides=(1, 1), name='pool3' + res)(x)
+
+    x = fire_module(x, fire_id=4, leaky=leaky, res=res, squeeze_param=int(squeeze_param), squeeze_ratio=float(squeeze_ratio), pct_3x3=float(pct_3x3))
+    x = fire_module(x, fire_id=5, leaky=leaky, res=res, squeeze_param=int(squeeze_param), squeeze_ratio=float(squeeze_ratio), pct_3x3=float(pct_3x3))
+
+    #if pooling:
+    #    x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), name='pool5' + res)(x)
+
+    #x = fire_module(x, fire_id=6, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*3)
+    #x = fire_module(x, fire_id=7, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*3)
+    #x = fire_module(x, fire_id=8, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*3)
+    #x = fire_module(x, fire_id=9, leaky=leaky, res=res, squeeze_param=int(squeeze_param), expand_param=int(squeeze_param)*3)
     x = Dropout(0.5, name='drop9' + res)(x)
 
     x = Conv2D(bottleneck, (1, 1), padding='valid', name='conv10' + res)(x)
@@ -216,7 +228,8 @@ def squeezenet(data, leaky, exclude_top, res, squeeze_param, filters, kernel_siz
 
 
 def multires_squeezenet(full, med, low, leaky, filters, kernel_size,
-                        top_neurons, dropout, squeeze_param, bottleneck):
+                        top_neurons, dropout, squeeze_param, bottleneck, 
+                        squeeze_ratio, pct_3x3):
     '''uses three full size squeezenets
        and concatenates output into
        small final fully-connected layers.
@@ -227,15 +240,18 @@ def multires_squeezenet(full, med, low, leaky, filters, kernel_size,
 
     fullres_squeezenet = squeezenet(input_fullres, leaky=leaky, exclude_top=True, res='full',
                                     squeeze_param=int(squeeze_param), kernel_size=int(kernel_size),
-                                    filters=int(filters), bottleneck=int(bottleneck))
+                                    filters=int(filters), bottleneck=int(bottleneck), squeeze_ratio=float(squeeze_ratio),
+                                    pct_3x3=float(pct_3x3), pooling=True)
 
     medres_squeezenet = squeezenet(input_medres, leaky=leaky, exclude_top=True, res='med',
                                    squeeze_param=int(squeeze_param), kernel_size=int(kernel_size),
-                                   filters=int(filters), bottleneck=int(bottleneck))
+                                   filters=int(filters), bottleneck=int(bottleneck), squeeze_ratio=float(squeeze_ratio),
+                                   pct_3x3=float(pct_3x3), pooling=False)
 
     lowres_squeezenet = squeezenet(input_lowres, leaky=leaky, exclude_top=True, res='low',
                                    squeeze_param=int(squeeze_param), kernel_size=int(kernel_size),
-                                   filters=int(filters), bottleneck=int(bottleneck))
+                                   filters=int(filters), bottleneck=int(bottleneck), squeeze_ratio=float(squeeze_ratio),
+                                   pct_3x3=float(pct_3x3), pooling=False)
 
     merged_branches = concatenate([fullres_squeezenet, medres_squeezenet, lowres_squeezenet])
     merged_branches = Dense(top_neurons, activation=LeakyReLU())(merged_branches)
@@ -252,8 +268,8 @@ def multires_squeezenet(full, med, low, leaky, filters, kernel_size,
 
 
 def train_model(train_files='hand-data', job_dir='./tmp/test1', kernel_size=5,
-                filters=16, top_neurons=128, dropout=0.5, squeeze_param=16,
-                bottleneck=128, **args):
+                filters=10, top_neurons=32, dropout=0.5, squeeze_param=3,
+                bottleneck=32, squeeze_ratio=0.125, pct_3x3=0.5, **args):
     """ main entry point for processing args and training model
     """
     logs_path = job_dir + '/logs/' + datetime.now().isoformat()
@@ -295,11 +311,14 @@ def train_model(train_files='hand-data', job_dir='./tmp/test1', kernel_size=5,
                                                                                      top_neurons,
                                                                                      dropout,
                                                                                      squeeze_param,
-                                                                                     bottleneck)
+                                                                                     bottleneck,
+                                                                                     squeeze_ratio,
+                                                                                     pct_3x3)
 
     error = calculate_error(model, test_full, test_med, test_low, test_labels,
                             mean_, std_, kernel_size, filters, top_neurons,
-                            dropout, train_files)
+                            dropout, squeeze_param, bottleneck, squeeze_ratio, pct_3x3,
+                            train_files)
 
 
 if __name__ == '__main__':
@@ -328,6 +347,12 @@ if __name__ == '__main__':
                         help='param for cnn')
 
     parser.add_argument('--bottleneck',
+                        help='param for cnn')
+
+    parser.add_argument('--squeeze_ratio',
+                        help='param for cnn')
+
+    parser.add_argument('--pct_3x3',
                         help='param for cnn')
 
     args = parser.parse_args()
