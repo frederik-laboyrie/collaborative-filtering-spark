@@ -94,6 +94,8 @@ def generator_train(full, med, low, labels, kernel_size, filters, top_neurons,
     labels_angles += 45
     train_orig_lab, test_orig_lab = train_test_split(labels_angles)
     labels_standardised, mean_, std_ = mean_std_norm(labels_angles)
+    labels_standardised +=2
+    labels_standardised /=2
     train_labels, test_labels = train_test_split(labels_standardised)
 
     model.fit_generator(multiinput_generator(train_full, train_med,
@@ -108,6 +110,8 @@ def calculate_error(model, test_full, test_med, test_low, test_labels, mean_, st
                     kernel_size, filters, top_neurons, dropout, squeeze_param, 
                     bottleneck, squeeze_ratio, pct_3x3, train_files, test_orig_lab):
     std_angles = model.predict([test_full, test_med, test_low])
+    std_angles = std_angles * 2
+    std_angles -=2
     unstd_angles = reverse_mean_std(std_angles, mean_, std_)
     #error = unstd_angles - test_labels
     error = abs((unstd_angles) - (test_orig_lab))
@@ -121,7 +125,7 @@ def calculate_error(model, test_full, test_med, test_low, test_labels, mean_, st
     print('zenith: {}'.format(mean_error_zenith))
     print('elevation: {}'.format(mean_error_elevation))
     print('\n' * 10)
-    file_content = """hi res pool SQUEEZE, expansion 2 , 4 fire modules, stride 1: kernel_size: {}, filters: {}, 
+    file_content = """new error hi res pool SQUEEZE, expansion 2 , 4 fire modules, stride 1: kernel_size: {}, filters: {}, 
                       elevation: {}, zenith: {}, top_neurons: {},
                       dropout_both_layers: {}, squeeze_param: {}, 
                       bottleneck: {}, squeeze_ratio: {},
@@ -180,7 +184,7 @@ def fire_module(x, fire_id, leaky, res, squeeze_param=16, squeeze_ratio=0.125, p
     x = concatenate([left, right], name=str(s_id) + str(relu_name) + 'concat' + res)
     return x
 
-def squeezenet(data, leaky, exclude_top, res, squeeze_param, filters, kernel_size, bottleneck, squeeze_ratio, pct_3x3 ,pooling):
+def squeezenet(data, leaky, exclude_top, res, squeeze_param, filters, kernel_size, bottleneck, squeeze_ratio, pct_3x3, pooling):
     '''squeezenet implementation
        with structure as in original
        paper. note bottleneck replaces
@@ -245,7 +249,7 @@ def multires_squeezenet(full, med, low, leaky, filters, kernel_size,
     fullres_squeezenet = squeezenet(input_fullres, leaky=leaky, exclude_top=True, res='full',
                                     squeeze_param=int(squeeze_param), kernel_size=int(kernel_size),
                                     filters=int(filters), bottleneck=int(bottleneck), squeeze_ratio=float(squeeze_ratio),
-                                    pct_3x3=float(pct_3x3), pooling=True)
+                                    pct_3x3=float(pct_3x3), pooling=False)
 
     medres_squeezenet = squeezenet(input_medres, leaky=leaky, exclude_top=True, res='med',
                                    squeeze_param=int(squeeze_param), kernel_size=int(kernel_size),
