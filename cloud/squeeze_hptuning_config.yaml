@@ -2,7 +2,7 @@ trainingInput:
   hyperparameters:
     goal: MAXIMIZE
     hyperparameterMetricTag: accuracy
-    maxTrials: 16
+    maxTrials: 20
     maxParallelTrials: 1
     params:
       - parameterName: kernel_size
@@ -12,13 +12,13 @@ trainingInput:
         scaleType: UNIT_REVERSE_LOG_SCALE
       - parameterName: filters
         type: INTEGER
-        minValue: 10
+        minValue: 5
         maxValue: 20
         scaleType: UNIT_REVERSE_LOG_SCALE
       - parameterName: top_neurons
         type: INTEGER
-        minValue: 24
-        maxValue: 120
+        minValue: 16
+        maxValue: 84
         scaleType: UNIT_REVERSE_LOG_SCALE
       - parameterName: dropout
         type: DOUBLE
@@ -27,11 +27,21 @@ trainingInput:
         scaleType: UNIT_REVERSE_LOG_SCALE
       - parameterName: squeeze_param
         type: INTEGER
-        minValue: 16
-        maxValue: 64
+        minValue: 2
+        maxValue: 8
         scaleType: UNIT_REVERSE_LOG_SCALE
       - parameterName: bottleneck
         type: INTEGER
-        minValue: 16
-        maxValue: 256
+        minValue: 8
+        maxValue: 128
+        scaleType: UNIT_REVERSE_LOG_SCALE
+      - parameterName: squeeze_ratio
+        type: DOUBLE
+        minValue: 0.1
+        maxValue: 0.7
+        scaleType: UNIT_REVERSE_LOG_SCALE
+      - parameterName: pct_3x3
+        type: DOUBLE
+        minValue: 0.15
+        maxValue: 0.75
         scaleType: UNIT_REVERSE_LOG_SCALE
