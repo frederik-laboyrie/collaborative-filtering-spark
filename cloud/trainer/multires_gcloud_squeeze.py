@@ -91,6 +91,7 @@ def generator_train(full, med, low, labels, kernel_size, filters, top_neurons,
     train_med, test_med = train_test_split(med)
     train_low, test_low = train_test_split(low)
     labels_angles = radian_to_angle(labels)
+    labels_angles += 45
     train_orig_lab, test_orig_lab = train_test_split(labels_angles)
     labels_standardised, mean_, std_ = mean_std_norm(labels_angles)
     train_labels, test_labels = train_test_split(labels_standardised)
@@ -100,15 +101,18 @@ def generator_train(full, med, low, labels, kernel_size, filters, top_neurons,
                         steps_per_epoch=8,
                         epochs=75)
 
-    return model, test_full, test_med, test_low, test_labels, mean_, std_
+    return model, test_full, test_med, test_low, test_labels, mean_, std_, test_orig_lab
 
 
 def calculate_error(model, test_full, test_med, test_low, test_labels, mean_, std_,
                     kernel_size, filters, top_neurons, dropout, squeeze_param, 
-                    bottleneck, squeeze_ratio, pct_3x3, train_files):
+                    bottleneck, squeeze_ratio, pct_3x3, train_files, test_orig_lab):
     std_angles = model.predict([test_full, test_med, test_low])
     unstd_angles = reverse_mean_std(std_angles, mean_, std_)
-    error = unstd_angles - test_labels
+    #error = unstd_angles - test_labels
+    error = abs((unstd_angles) - (test_orig_lab))
+    for x in error:
+        print(x)
     mean_error_elevation = np.mean(abs(error[:, 0]))
     mean_error_zenith = np.mean(abs(error[:, 1]))
     print('\n' * 10)
@@ -132,7 +136,7 @@ def calculate_error(model, test_full, test_med, test_low, test_labels, mean_, st
                                                   squeeze_ratio,
                                                   pct_3x3)
 
-    with file_io.FileIO(train_files + '/squeezeresults.txt', mode="a") as f:
+    with file_io.FileIO(train_files + '/squeezeresults3.txt', mode="a") as f:
         f.write(file_content)
 
     return mean_error_elevation, mean_error_zenith
@@ -302,7 +306,7 @@ def train_model(train_files='hand-data', job_dir='./tmp/test1', kernel_size=5,
     low = np.reshape(low, [len(low), 32, 32, 3])
     labels = np.load(labelsio)
 
-    model, test_full, test_med, test_low, test_labels, mean_, std_ = generator_train(full,
+    model, test_full, test_med, test_low, test_labels, mean_, std_, test_orig_lab = generator_train(full,
                                                                                      med,
                                                                                      low,
                                                                                      labels,
@@ -318,7 +322,7 @@ def train_model(train_files='hand-data', job_dir='./tmp/test1', kernel_size=5,
     error = calculate_error(model, test_full, test_med, test_low, test_labels,
                             mean_, std_, kernel_size, filters, top_neurons,
                             dropout, squeeze_param, bottleneck, squeeze_ratio, pct_3x3,
-                            train_files)
+                            train_files, test_orig_lab)
 
 
 if __name__ == '__main__':
