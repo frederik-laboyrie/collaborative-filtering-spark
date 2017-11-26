@@ -232,7 +232,25 @@ A maximum number of trials was set at 32 for each structural choice and then the
 
 As cross-validation is not used, but rather a simple train-test split, in order to estimate generalization error the average error for the top 16 performing network hyperparameter configurations is used to define the accuracy for a given structure. This of course has the advantage of seeing how stable a model is over hyperparameter space at the loss of seeing how stable a model is on being trained on different subsets of the data.\\
 
-Although the dataset was fairly small, it is completely justified not to increase training cost by 5-10x (assuming 5-10 folds). In the end, this would only confirm that one particular set of hyperparameters is likely to generalise the best. If a model is stable of hyperparameter space then this is irrelevant and if the models were to be retrained using additional data then it is more desirable to have a network structure which is likely to be able to sustain high performance, rather than be in need of further extensive hyperparameter optimization.\\
+Although the dataset was fairly small, it is completely justified not to increase training cost by 5-10x (assuming 5-10 folds). In the end, this would only confirm that one particular set of hyperparameters is likely to generalise the best. If a model is stable of hyperparameter space then this is irrelevant and if the models were to be retrained using additional data then it is more desirable to have a network structure which is likely to be able to sustain high performance, rather than be in need of further extensive hyperparameter optimization.< this is not true\\
+
+\begin{table}[h!]
+  \begin{center}
+    \caption{Hyperparameter Ranges}
+    \label{tab:table1}
+    \begin{tabular}{l|l|l|l}
+      \textbf{Hyperparameter} & \textbf{Vanilla} &                          \textbf{SqueezeNet} & \textbf{MobileNet}\\
+      \hline
+      Kernel size & 2 - 7 & 2 - 7 & 2 - 7\\
+      Filters & 5 - 25 & 5 - 25 & 5 - 25\\
+      Dropout & 0 - 0.7 & 0 - 0.7 & 0 - 0.7\\
+      Fully-connected neurons & 16 - 256 & 16 - 256 & 16 - 256\\
+      Bottleneck 1x1s & - & 16 - 256 & - \\
+      Squeeze ratio & - & 0.1 - 0.7 & - \\
+      Percentage 3x3 & - & 0.15 - 0.75 & - \\
+    \end{tabular}
+  \end{center}
+\end{table}
 
 
 \subsection*{Results}
@@ -241,6 +259,9 @@ Strong results were achieved with the vanilla CNN using standard convolutions, w
 These strong results exist in a large part of hyperparameter space and a largely driven by structural aspect of the network. Not using layer-wise batch normalization provided the first major improvements, as the normalization was unstable due to the small batch size required by the input generator for memory management. In fact, some configurations diverged to produce errors of over 180 degrees.\\
 
 Surprisingly, using pooling which intuitively was a poor choice due to loss in spatial information. This loss in spatial information was however limited due to the small kernel sizes which achieved these results. However, the there was no discernible difference in performance when pooling layers were removed from the low resolution part of the network, where the kernels were largest relative to the size of the image. \\
+
+SqueezeNets achieved equally strong results and again was very stable in hyperparameter space but showed instability to certain structural changes. For instance, larger, deeper models, specifically the structure as in the original implementation of SqueezeNet sometimes showed wild, divergent properties. The optimal structure deviated far from the original implementation, with only 3-4 fire modules and no pooling. \\
+
 
 \subsection*{References}
 \begin{enumerate}
