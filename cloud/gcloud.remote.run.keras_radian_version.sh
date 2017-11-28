@@ -7,7 +7,7 @@ export HPTUNING_CONFIG=vanilla_hptuning_config.yaml
 gcloud ml-engine jobs submit training $JOB_NAME \
   --job-dir gs://$BUCKET_NAME/$JOB_NAME \
   --runtime-version 1.0 \
-  --module-name trainer.multires_gcloud_radian \
+  --module-name multires_gcloud_vanilla_bw \
   --package-path ./trainer \
   --region $REGION \
   --config $HPTUNING_CONFIG \
@@ -15,4 +15,5 @@ gcloud ml-engine jobs submit training $JOB_NAME \
   --train-files gs://hand-data \
   --kernel_size 5 \
   --filters 16 \
-  --top_neurons 128
+  --top_neurons 128 \
+  --dropout 0.5
