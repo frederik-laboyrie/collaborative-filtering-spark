@@ -1,24 +1,18 @@
 \documentclass{article}
 \usepackage{enumitem}
+\usepackage[utf8]{inputenc}
 \begin{document}
-\section*{Multiresolution Convolutional Neural Network Architectures for Hand Orientation Inference}
+\author{Frederik Laboyrie}
+\title{Multiresolution Convolutional Neural Network Architectures for Hand Orientation Inference}
+\maketitle
+\begin{abstract}
+\emph{In this work an efficient convolutional neural network (CNN) architecture will be developed which is capable of inferring hand orientation angle through regression on uncalibrated 2D monocular images. This is a useful technique in augumented reality and human computer interaction which often rely on low resource hardware such as handheld mobile devices which have slower processing speed and lack depth sensors.}
+\end{abstract}
 
-Problem Description and Objectives (10%):
-For a mark of 50% – a pass at M-level with credit awarded :
-Mark
-What you are trying to do...
-Extent to which:
-the problem is fully, clearly and realistically identified and scoped;
-A clear description of the problem and its scope with precisely
-defined objectives, research questions and outcomes, all of which
-are convincingly justified.
-the project’s objectives and beneficiaries are precisely defined;
-research questions (and associated hypotheses where relevant) are clearly stated;
-
-project outcomes are described: Outcomes may include knowledge, theory or model, in
-depth case studies or more tangible outcomes such as tools, techniques or products.
+\pagebreak
 
-\subsection*{Problem Description and Objectives}
+
+\section{Problem Description and Objectives}
 
 In this work an efficient convolutional neural network (CNN) architecture will be developed which is capable of inferring hand orientation angle through regression on uncalibrated 2D monocular images. This is a useful technique in augumented reality and human computer interaction which often rely on low resource hardware such as handheld mobile devices which have slower processing speed and lack depth sensors.\\
 
@@ -41,6 +35,84 @@ As at the time of writing, newer high-end mobile devices tend to be built with b
 The dataset was collected by the Computer Vision department at City, University of London and as of yet has not had these techniques applied to it. In this way, the department are also potential beneficiaries of this work if the results are more promising than those gained in the first work [17] to use them.\\
 
 The desired outcome of this work are the results alone and I do not plan within this work to experiment with the resulting models integration into a product. Analysis of the results will of course take use cases of the models into account. For example, by favouring low variance in error or understanding whether any improvements in error are worth the potential increases in latency.  \\
+
+I also want to highlight the specific goals of this work are similar to those in [17]. The focus is on developing a generalizable technique in which hand orientation can be inferred from multiple viewpoints on any hand in a quick manner, that is one which does not require calibration.\\
+
+\section{Critical Context}
+This work not only takes into account work specifically around hand-related tasks but also work which can be more generally applied to machine learning tasks. These will both be discussed in this section and techniques chosen to be applied will be discussed in detail in the following section.   
+
+\subsection{Hand Pose and Orientation Inference}
+Hand pose and orientation inference tasks can be performed both in a discriminative and a generative manner. Discriminative approaches are capable of providing an output of angle or pose for any given image once a model is built. Generative approaches rather are initialised to build a model of an entire hand and then the hand is tracked after initialisation.\\
+
+Building discriminative models for hand pose and orientation inference is a task which typically requires non-standard architectures due to its intricacy. Training capacity must be used to model very small changes and it is often useful to use more global features. For example with hand orientation, global features can be used to dismiss large parts of angle space and then local features are learnt in conjunction with these and can potentially provide additional accuracy as the features can become specific to areas in angle spaces. Without the use of global features the localized features would have to infer all information about the hand and may become too general.\\
+
+This technique is used in [13] where a multiresolution CNN is used on a dataset of RGBD images for real time pose-recovery. A 96x96 image is downsampled 2x and 4x, where the more downsampled an image the more global the features can be extracted. The features are more global as a filter of a given size will convolve over a larger space over a low resolution image compared to a high resolution and therefore outputs more general information about the shape of the hand. The images of differing resolutions are passed into separate CNNs before their feature maps are flattened, concatenated and passed into fully-connected layers. It would of course be an alternative to use larger filters instead of downsampling but this increases learning capacity greatly and makes the model less likely to generalise.\\
+
+In [13] the network does not simply trained on a label but is trained to generate 14 18x18 heatmaps which represent the probability of a given joint being in a location. These heatmaps are then combined using the inverse kinematics algorithm to recover the pose of the hand. Note that the training is compartmentalised into 14 separate heatmaps each representing a separate joint, rather than learning the location of all joints individually. These intermediate heatmaps allow the network to focus on local features which increases accuracy. It also allows better recovery of pose if a heatmap fails as the other non-failing heatmaps can be used with a heuristic.\\
+
+[13] is not unique in using joint angle and position for solving hand pose estimation. [14], for example directly estimates 3D joint location with a variety of architectures including, multi-scale, deep and shallow. In [14], as well, the physical constraints of joint positions in a hand are also used in alternate architecture which models first a low dimensional embedding. This lower implicit dimensionality forces the network to learn whilst the physical constraints of the hands are enforced. There is an additional reconstruction layer which projects the lower dimensional vector back into higher dimensional joint space. In this way, it still models the joint locations directly, but the low dimensional embedding before the reprojection acts as a 'bottleneck', restricting training. [14] goes further in a refining stage where a separate network is used for each joint along with a system which corrects overlapping regions.\\
+
+[15], by the same authors as in [14], again estimates 3D joint location but uses these locations to develop synthesised images of hands. Synthesised images of hands using poorly estimated 3D joint location will result in an image which does not well represent a hand and will be malformed in shape. For refinement, something similar to a Siamese network is then used in [15]. This network is a multi-input network with a weight constraint in each path such that both paths have identical weights before their output is concatenated before being passed into shared fully-connected layer.\\
+
+This network has the synthesised image and the true image passed into the Siamese network architecture which iteratively updates the 3D joint location to reduce disparity between the synthesised image and the true image which leads to more accurate 3D joint location estimation. To increase the speed of this convergence a given factor between 0 and 1 is used as a minimal improvement along with Gaussian noise being applied to the poses which allows the synthesised image to converge more quickly to the true image.\\
+
+[16] uses fully 3D information, noting that in [13] the joint location probability heat maps which are the results of the regression only contain 2D information. This is done by modelling on multiple views which are obtained by projecting the original single-depth images onto three orthogonal planes. Because the 2D positions of the joints are projected onto multiple planes, multiple-view CNNs are then more robust to errors in 2D location estimation which could results in large depth estimation errors in single-view CNNs. They are also more robust to ambiguity and can learn hand constraints implicitly as opposed to it being pre-defined as in [13]. This technique was able to achieve state-of-the-art results on multiple datasets including ones which originally relied on calibration and tracking rather than being purely data-driven.\\
+
+This work will focus exclusively on hand orientation on 2D uncalibrated monocular images and will follow on from work in [17] where azimuth and elevation axis angles are modelled on directly. I will continue this approach of modelling directly on the images and the labels. Further, as the dataset in [17] provides labels for the angles and not for joint location, it is far from trivial to integrate anything beyond broader architectural choices from the previous existing body of work. Most feasible, is the multi-input architecture which I believe is a significant enough step up in complexity from the ML-RF approach to form a basis for this work as it is an underlying similarity that exists in recent work in this area. \\
+
+Further, modelling on joint locations is intuitively something that is much more important for hand pose estimation. In hand orientation in general, and specifically in [17], the hand is seen in a similar position so it is not necessary to infer the hand orientation from joint position but rather it can be inferred directly.\\
+
+The combination of global and local features intends to replace certain characterteristics that derive from [17]'s best results which are achieved using a ensemble of expert regressors which each focus on a particular area of angle space.  In order to allow for this, [17]'s architecture includes a first layer which outputs the posterior probality of a given example belonging to a particular part of angle space. This of course allows the model to dismiss large regions of angle space and gain benefit from the expert regressors. Note that all of the regressors in [17] are Random Forests which use contour distance features as input. \\
+
+[17] develops a method in which each expert regressor will output a posterior probability of an example belonging to its subspace. However, instead of using these posterior probabilities naively, during training the ground truth probabilities are used alongside the expert regressor's posterior probabilities to learn a marginalised probability distribution from which the marginalised regressors weights are derived from. Essentially, this is learning a way to combine the  posterior probabilites to form a marginalised probability distribution most similar to the ground truth probability. This was done using a novel optimisation technique similar to  Kullback-Leibler divergence. \\
+
+[17] using a marginalisation layer followed by expert regressors would make their approach a multi-layer Random Forest (ML-RF hereafter. Whereas [17] developed a novel and generalizable technique as previously described, a significant body of work exists also utilising ML-RF for similar tasks. [18] uses an ML-RF but for hand-pose estimation. The first layer classifies a general shape and the second layer focuses on classifying particular parts of the hand. [18] most noticeably differs from [17] in that the posterior probabilities are used naively and are simply used to weight the posterior probabilities of the second layer. They are not used to model a marginal probability during training. \\
+
+Note that combining these posterior probabilities in this context has a similar effect to the way that the concatentated feature maps in multi-input map are modelled on simultaneously in the final layers of the network. This is in that the models are training on several sources of information which are describing separate things. In the context of the multi-input architectures the combination of global and local features serve the same purpose. It would be possible to further train expert networks but this would increase computaional complexity greatly and limit the effect of any improvement in convolutional latency. \\
+
+ML-RF techniques are computationally cheap and able to achievement acceptable performance but Random Forests are not able to build complex combined features as CNNs are able to. These features allow much greater accuracy and can model on the hand directly whereas Random Forests must rely on extracted features as well. CNNs consistently achieve state-of-the-art on this task undoubtedly due to these advantages. Vanilla CNNs are extremely costly computationally both during training and run-time. However, recent advances have drastically reduced the cost and size of CNNs with minimal to no loss in computational accuracy. This makes them potentially suitable for this task in real-time. How computaional cost is decreased is described in the following section. \\
+
+It is important to note that despite complex CNN architectures achieving state of the art performance in many hand pose or orientation estimation tasts, the gains are not significant over Random Forest methods. A reason noted in [20] is that the CNNs architectures than have emerged are relatively shallow compared to those where achieve state of the art on other tasks such as ImageNet ***. This is partly due to avoid overfitting on small datasets such as the one that will be used in this task. \\
+
+
+
+Note that the generative techniques in [21, 25] are for dataset generation or augmentation and remain completely separate from previous work which uses generative techniques to infer hand pose directly. These more typical modern generative techniques are largely based around building a 3D model of the hand and tracking the individual components of the model in real-time in order to infer the pose. This was done  in [26] where a hand model  where the hand model was build using geometric primitives.\\
+
+These generative techniques typically rely on strong computational power with multi-GPU set ups and typically fail to generalize on a new user's hand which cause them to be completely separate to what is aiming to be achieved in this work. Generative techniques also suffer from drift, that is accumulation of errors, which was confronted in [21] using local adversarial loss.\\ 
+
+In [20], several best practices are explored whilst using an Regional Ensemble Net architecure, which similarly to other. architectures models directly on 3D hand joint co-ordinates. The Regional Ensemble Net architecture produces feature maps which focus on different regions of the image. These region wise feature maps are concatenated and passed into fully-connected layers where they can combine into complex joint features. Concatenating these feature maps rather than using average pooling across the feature maps was shown to improve performance again as the network can learn itself how best to combine them. [20] is unique in that different views of inputs are used simultaneously during training to predict the same pose, rather than just during testing to check robustness. \\
+^^^ add this about choice to concatenate, and say why you didnt use regions
+
+\subsection{Memory Overhead Management}
+\subsection{Training Approaches}
+
+The best practices shown to improve performance in [20] were data augmentation, smooth L1 loss and patch cropping, where a cube from the center of the depth image is extracted and used as further input for training. * add section 2 here
+
+(unlabelled comment? can they use unlabelled in gan no?)
+Small datasets are common in hand pose and orientation estimation tasks as they typically rely on manual annotation.   Generic dataset augmentation techniques, such as translation and rotation of images are still viable for hand pose estimation but can only generate a limited amount of additional data. 
+
+Recent advances in generative adversarial techniques have allowed synthetic images to become realistic enough to be used for training [21]. Generative adversarial networks originally proposed in [29] utilise two networks, a generative one and a discriminator. The generative network will generate data for which the discriminator outputs a probability of it having appeared in the original training data. The generative network gradually improves until it can generate data that is indiscernible from the original training data according to the discriminator. \\
+
+Generative adversarial data augmentation techniques can produce a much wider range of augmentations than standard techniques. However, images generated by adversarial networks can often have large artefacts and distortions. Before recent developments [21, 30] synthetic images were not realistic enough and models could not generalize when used on real images.SimGAN [21] uses a refinement stage to avoid artifacts and generate images more accurately such that they are suitable for use as training data. This is done using self-regularization and local adversarial loss which use smaller receptive fields which help avoid drift and create more life-like images.\\\\
+
+Using these techniques large improvements were achieved on several eye direction and hand pose datasets using the refined syntheitcs images compared to the original datasets. MPIIGaze showed a 22.3\% improvement in accuracy using the refined synthetic images compared to the original dataset. [21] does not implement the customized pipelines that achieve state-of-the-art for NYU Hand Pose dataset, just a vanilla CNN, but are able to achieve 8.8\% improvement in accuracy using the refined synthetic images.\\
+
+ 
+is this a copy? add comment on why you are not using this i.e. because it is just well documented gain. 
+SimGAN, the technique developed in [21] generates images adversarially in the first stage until the images fool the adversarial network and then they are refined  in a refiner network. Self-regularization and local adversarial loss enable much more accurate or life-like as the smaller receptive fields help avoid drift and prevent artifacts form occuring. State-of-the-art is achieved on MPIIGaze with 22.3\% improvement in accuracy using the refined synthetic images compared to the original dataset. [21] do not implement the customized pipelines that achieve state-of-the-art for NYU Hand Pose dataset, just a vanilla CNN, but are able to achieve 8.8\% improvement in accuracy using the refined synthetic images.\\
+
+These results are not unique to hand pose and eye direction datasets and were recently shown in [30] to achieve between 2-14\% on a variety of benchmark datasets. Their architecture, called DAGAN presents both the true image and the images that are generated from it to the discriminator. In this way, the adversarial network can be encouraged to produce images that vary from the true image and does not simply try to create a replica behaving like an autoencoder (VAE).\\
+
+Further work generative adversarial data augmentation specifically for hand modelling exsits in which [25] a VAE is used to model a lower-dimension representation of 3D hand pose. This has the effect of allowing the discriminator to be on trained on examples which can pass through the generative process any given number of times. The lower-dimension represetnations are used by a GAN to develops a realistic depth map which is what the discriminator is trained on jointly. 
+
+\subsection{Extra}
+ML-RF techniques are generally reliant on the results of the first layer. [19] is an example of this as it uses cascaded regressors, where each following regressor depends on the results of the previous. This technique was motivated by relationships between different parts of the hand, as certain impossibilities in shape allow a hierarchical logic to define how the cascaded regressors depend on each other. However, it is impossible to recover from weak results in the first layer. In [17] and [18] marginalisation and weighted sums are used which can buffer any inaccuracies but not avoid them. \\
+
+
+
+
+
+
 \subsection*{Convolutional Neural Networks}
 All discriminative models built in this work will be variations of a vanilla convolutional neural network. To understand and describe the benefits of using these variations it is important to generally define these networks but also specifically how matrices convolve whilst passing through these networks.\\
 
