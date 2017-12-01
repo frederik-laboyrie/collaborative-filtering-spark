@@ -3,11 +3,44 @@
 \begin{document}
 \section*{Multiresolution Convolutional Neural Network Architectures for Hand Orientation Inference}
 
-\subsection*{Introduction}
-In this work an efficient convolutional neural network (CNN) architecture will be developed which is capable of inferring hand orientation through regression on uncalibrated 2D monocular images. This is a useful technique in augumented reality and human computer interaction which often rely on low resource hardware such as handheld mobile devices.\\
+Problem Description and Objectives (10%):
+For a mark of 50% – a pass at M-level with credit awarded :
+Mark
+What you are trying to do...
+Extent to which:
+the problem is fully, clearly and realistically identified and scoped;
+A clear description of the problem and its scope with precisely
+defined objectives, research questions and outcomes, all of which
+are convincingly justified.
+the project’s objectives and beneficiaries are precisely defined;
+research questions (and associated hypotheses where relevant) are clearly stated;
+
+project outcomes are described: Outcomes may include knowledge, theory or model, in
+depth case studies or more tangible outcomes such as tools, techniques or products.
 
-Many challenges have plagued this task due to the complicated nature of hands. For instance natural self occlusion, high joint flexibility and the necessity to be able to model from a wide variety of view points for approaches to be useful in real life situations. \\
+\subsection*{Problem Description and Objectives}
 
+In this work an efficient convolutional neural network (CNN) architecture will be developed which is capable of inferring hand orientation angle through regression on uncalibrated 2D monocular images. This is a useful technique in augumented reality and human computer interaction which often rely on low resource hardware such as handheld mobile devices which have slower processing speed and lack depth sensors.\\
+
+This task specifically builds on the work in [17] where manually extracted contour distance features were used to train a multi-layered Random Forest (ML-RF hereafter). I will apply techniques more related to state-of-the-art performance in hand pose estimation which typically use complex Convolutional Neural Network (CNN hereafter) architectures. CNNs are capable of automatically extracting features during the training process and are widely used to achieve state-of-the-art performance in many computer vision tasks. \\
+
+However, many challenges have plagued this task due to the complicated nature of hands. For instance natural self occlusion, extreme similarity in the appearance of certain orientations and the necessity to be able to model from a wide variety of view points for approaches to be useful in real life situations. Other challenges such as high joint flexibility are specific to architectures where joints may be modelled on individually. \\
+
+It is largely for these reasons that complex architectures, such as those which focus on joints, as previously mentioned, but also those which take multiple inputs of varying resolutions in order to build a wider variety of features to aid the training process. Complex network architectures such as these do not lend well to low resource hardware as producing output becomes much more costly. Tasks such as hand orientation inference and hand pose estimation generally will be taking place in real time and network latency is of concern along with accuracy. \\
+
+For this reason, my objective in this work is not only to develop network architectures inspired by recent advances in hand-related tasks but also to experiment with variations in these architectures which decrease latency. These variations will be driven by using alternatives to standard convolutional filters, which make up the mechanism through which CNNs extract features from pixel values. \\
+
+I will be using an identical dataset as was used in [17], so I will be able to benchmark my results to those gained in [17]. It is therefore my aim to improve on the accuracy in [17] by using the network architecture which is not optimised for latency and then not experience significant losses in performance from the low latency network architectures. It is a well known result for low latency architectures to have little to no loss in performance, but it is not known whether they are suitable for this intricate task as any spatial information being lost during the convolutions could potentially have large effects on the final accuracy. \\
+
+In general, it will be difficult to pick up on precise spatial relations. The examples in the dataset are fairly homogenous and it is worth highlighting that the primary challenge in this task will be able to build any architecture capable of picking up on the minute differences in hand positions rather than replicating a well known result of low latency networks not causing significant loss in performance. \\
+
+If successful, potential beneficiaries of the resulting models would be augmented reality and virtual reality developers for applications which aim to be viable to run on a wide array of hardware. The decrease computational complexity of these models compared to those achieving state-of-the-art accuracy, would allow them to utilise texture features extracted by convolutional filters, ideally increasing accuracy with neglibile loss in latency compared to ML-RF approaches. \\
+
+As at the time of writing, newer high-end mobile devices tend to be built with binocular cameras or stand-alone depth sensors architectures. However, any model architectures put forward in this work could equally be trained using depth values in addition to RGB values or even training on depth values alone. It is therefore not necessary to discount the possibility of using these architectures on devices which are capable of deriving depth information. \\
+
+The dataset was collected by the Computer Vision department at City, University of London and as of yet has not had these techniques applied to it. In this way, the department are also potential beneficiaries of this work if the results are more promising than those gained in the first work [17] to use them.\\
+
+The desired outcome of this work are the results alone and I do not plan within this work to experiment with the resulting models integration into a product. Analysis of the results will of course take use cases of the models into account. For example, by favouring low variance in error or understanding whether any improvements in error are worth the potential increases in latency.  \\
 \subsection*{Convolutional Neural Networks}
 All discriminative models built in this work will be variations of a vanilla convolutional neural network. To understand and describe the benefits of using these variations it is important to generally define these networks but also specifically how matrices convolve whilst passing through these networks.\\
 
@@ -252,6 +285,7 @@ Although the dataset was fairly small, it is completely justified not to increas
   \end{center}
 \end{table}
 
+Structural changes were not as strictly defined and developed during the experimental process. However, they largely revolved around differing the number of convolutional layers, pooling layers, and fully-connected layers. The overall multiresolution structure, including the resolution of the images, was not changed during the process. This also 
 
 \subsection*{Results}
 Strong results were achieved with the vanilla CNN using standard convolutions, with errors typically ranging between 3 and 7 degrees for both azimuth and elevation angles. This is a significant improvement on the 12 degrees average error achieve by the ML-RF techniques in [17]. \\
@@ -261,6 +295,14 @@ These strong results exist in a large part of hyperparameter space and a largely
 Surprisingly, using pooling which intuitively was a poor choice due to loss in spatial information. This loss in spatial information was however limited due to the small kernel sizes which achieved these results. However, the there was no discernible difference in performance when pooling layers were removed from the low resolution part of the network, where the kernels were largest relative to the size of the image. \\
 
 SqueezeNets achieved equally strong results and again was very stable in hyperparameter space but showed instability to certain structural changes. For instance, larger, deeper models, specifically the structure as in the original implementation of SqueezeNet sometimes showed wild, divergent properties. The optimal structure deviated far from the original implementation, with only 3-4 fire modules and no pooling. \\
+
+The results across all models beat benchmarks set in [17] significantly. This is not surprising given the increase in sophistication of methods. It is clear that using network structure similar to that which achieves state of the art results in hand pose estimation tasks can too allow great gains in accuracy in this particular hand orientation task. \\
+
+The usefulness of low latency fire modules and depthwise separable convolutions 
+
+\subsection*{Discussion}
+more robust data methodology
+single res
 
 
 \subsection*{References}
