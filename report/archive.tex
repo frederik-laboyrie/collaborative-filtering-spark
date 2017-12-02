@@ -96,3 +96,18 @@ The softmax distribution is parametrised using temperature as follows:
 Typically a high temperature is used which causes a softer distribution where the probabilities are spread over more classes. This is where the benefit of knowledge lies as the softmax layer can store information about similarity between classes that would not be stored in a simple one-hot layer.\\
 
 In [12] this technique is also scaled using ensembles of specialist models on Google's JFT dataset. This dataset has over 15,000 labels showing very clear benefits of training specialist models. In this work, where the specialist models simply train on a specific part of angle-space, there are minimal benefits to training. The labels of the larger, specialised models will just be less accurate than the true labels and do not hold extra information to distill into the smaller networks. Even training on the discriminator model has little benefit as the similarity between classes is known as they are related in known angle-space.
+
+\subsection{Extra}
+ML-RF techniques are generally reliant on the results of the first layer. [19] is an example of this as it uses cascaded regressors, where each following regressor depends on the results of the previous. This technique was motivated by relationships between different parts of the hand, as certain impossibilities in shape allow a hierarchical logic to define how the cascaded regressors depend on each other. However, it is impossible to recover from weak results in the first layer. In [17] and [18] marginalisation and weighted sums are used which can buffer any inaccuracies but not avoid them. \\
+
+
+was in methods
+The performance both in terms of latency and accuracy will be compared between SqueezeNets, MobileNets and Vanilla CNNs. I define a Vanilla CNN as one utilising 2D spatial convolutions followed by fully-connected layers. SqueezeNets were chosen as they do not utilise fully-connected layers. In this way, it gives an opportunity to use significantly fewer parameters than the other models.\\
+
+ pruning
+***Notes
+number of mult-adds not equal to performance i.e. irregular sparsity creates bottlenecks and it doesn't help. so random pruning helps but is largely for model size. less reg, less data aug -> small models don't have problems with overfitting as much.
+
+Note that no network compression techniques will be experimented with. This decision was made as networks for hand-orientation or hand-pose estimation tasks tend to be fairly shallow. I deemed it to be more beneficial to focus on latency alone and SqueezeNets provide a very low latency option due to the lack of fully-connected layers.\\
+
+Also, it is a well known result that memory compression techniques can reduce model size without lowering performance drastically. As the focus of this work is not merely to train the lowest possible latency model, but also to generally test convolutional methods on a dataset which has previously only had ML-RF techniques performed it, it is not beneficial to focus too much on model compression and showing a well known results again. That is I prefer to experiment with CNNs designed for low latency rather than generic model compression techniques.\\
