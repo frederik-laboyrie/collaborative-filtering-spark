@@ -325,7 +325,7 @@ A maximum number of trials was set at 32 for each structural choice and then the
 
 As cross-validation is not used, but rather a simple train-test split, in order to estimate generalization error the average error for the top 16 performing network hyperparameter configurations is used to define the accuracy for a given structure. This of course has the advantage of seeing how stable a model is over hyperparameter space at the loss of seeing how stable a model is on being trained on different subsets of the data.\\
 
-Although the dataset was fairly small, it is completely justified not to increase training cost by 5-10x (assuming 5-10 folds). In the end, this would only confirm that one particular set of hyperparameters is likely to generalise the best. If a model is stable of hyperparameter space then this is irrelevant and if the models were to be retrained using additional data then it is more desirable to have a network structure which is likely to be able to sustain high performance, rather than be in need of further extensive hyperparameter optimization.< this is not true\\
+Although the dataset was fairly small, it is completely justified not to increase training cost by 5-10x (assuming 5-10 folds). In the end, this would only confirm that one particular set of hyperparameters is likely to generalise the best. Stability of performance in hyperparameter space will allow us to draw similar conclusions.\\
 
 \begin{table}[h!]
   \begin{center}
@@ -345,26 +345,46 @@ Although the dataset was fairly small, it is completely justified not to increas
   \end{center}
 \end{table}
 
-Structural changes were not as strictly defined and developed during the experimental process. However, they largely revolved around differing the number of convolutional layers, pooling layers, and fully-connected layers. The overall multiresolution structure, including the resolution of the images, was not changed during the process. This also 
+Structural changes were not as strictly defined and developed during the experimental process. However, they largely revolved around differing the number of convolutional layers, pooling layers, and fully-connected layers. The overall multiresolution structure, including the resolution of the images, was not changed during the process. \\
 
 Latency will also be taken into consideration which will be measured by how many seconds taken to generate predictions on the entire original dataset on an i5 CPU***. Latency will of course be measured on the best performing models in terms of accuracy, but it will be necessary to understand for each model type how sensitive accuracy is to latency. Therefore latency will also have be tested on a significant part of parameter space. MAYBE not official measure of success just worth knowing cos don't know if will be on the cusp of real-time + other things to slow like preprocessing\\
 
-\subsection*{Results}
-Strong results were achieved with the vanilla CNN using standard convolutions, with errors typically ranging between 3 and 7 degrees for both azimuth and elevation angles. This is a significant improvement on the 12 degrees average error achieve by the ML-RF techniques in [17]. \\
+\section{Results}
+\begin{table}[h!]
+  \begin{center}
+    \caption{Results}
+    \label{tab:table1}
+    \begin{tabular}{l|l|l|l}
+      \textbf{} & \textbf{Vanilla} &                          \textbf{SqueezeNet} & \textbf{MobileNet}\\
+      \hline
+      Elevation Angle Error & 10.56$^{\circ}$ & 13.94$^{\circ}$ & -\\
+      Zenith Angle Error & 10.52$^{\circ}$  & 9.78$^{\circ}$ & -\\
 
-These strong results exist in a large part of hyperparameter space and a largely driven by structural aspect of the network. Not using layer-wise batch normalization provided the first major improvements, as the normalization was unstable due to the small batch size required by the input generator for memory management. In fact, some configurations diverged to produce errors of over 180 degrees.\\
+    \end{tabular}
+  \end{center}
+\end{table}
 
-Surprisingly, using pooling which intuitively was a poor choice due to loss in spatial information. This loss in spatial information was however limited due to the small kernel sizes which achieved these results. However, the there was no discernible difference in performance when pooling layers were removed from the low resolution part of the network, where the kernels were largest relative to the size of the image. \\
+Performance was inferior to results gained in [17]. However, the low latency models were able to achieve similar performance. The better performing low latency models also tended to be larger which offset most potential gains. For example, the best performing SqueezeNets would typically have 4 Fire modules for each resolution compared to the Vanilla networks 2 convolutional layers.\\
 
-SqueezeNets achieved equally strong results and again was very stable in hyperparameter space but showed instability to certain structural changes. For instance, larger, deeper models, specifically the structure as in the original implementation of SqueezeNet sometimes showed wild, divergent properties. The optimal structure deviated far from the original implementation, with only 3-4 fire modules and no pooling. \\
+The best performing SqueezeNet had a kernel size of 6, and with fairly high squeeze ratio and pct 3x3 of 0.47 and 0.723 respectively. The only characteristic it shared with the best performing Vanilla architecture is that it required heavy regularization with Dropout of 0.5.\\
 
-The results across all models beat benchmarks set in [17] significantly. This is not surprising given the increase in sophistication of methods. It is clear that using network structure similar to that which achieves state of the art results in hand pose estimation tasks can too allow great gains in accuracy in this particular hand orientation task. \\
+However, it is important not to dwell on these specifics as similarly configured models would become constant predictors during training. Many differing ways of processing the data or configuring the network led significantly worse results than the general frameworks which allowed the acceptable results as shown above.\\
 
-The usefulness of low latency fire modules and depthwise separable convolutions 
+For example, mean std normalisation of the pixel values caused significant drops in performance and the reasons for which are unclear. This was true both for He and Xavier intialization and the ReLUs used were very leaky so the risk of lots of input being culled as it entered the network was minimized.\\
+
+It is possible that the low resolution network was not low resolution enough and so the filters could not pick up on global enough features. I attempted to overcome this by using pooling for the low resolution network but this did not allow for improvements.\\
+
+Training was very unstable and many configuration would get stuck early on in training. This is despite stochastic measures such as ADAM. This was troublesome as these configuration would often become constant predictors. This made it difficult for the Bayesian framework to select optimal parameters as final performance measures became less meaningful due to the instability of training. \\
+
+Memory management was also troublesome during the training process and batch size had to be reduced to 1 for certain configurations and some configurations did not even compile due to running out of memory. Low batch did not allow full utilisation of the parallel processing capabilities of GPU and the long training times meant limited number of epochs were feasible. An epoch would last anywhere between 2-5 hours for most configurations. \\
+
 
 \subsection*{Discussion}
-more robust data methodology
-single res
+
+Although I failed to improve on the results in [17], my training framework was fairly generic and there is certainly space for future work to build on the architectures put forward in this work. For example, instead of the medium resolution network the contour distance features could be fed to a 1D CNN. This may take advantage of the multi-input architecture more. \\
+
+It may also be useful to benchmark the multiresolution architecture against a standard single-resolution CNN. This would allow a richer understanding of the benefits of this architecture for hand orientation as opposed to hand pose estimation. At the moment, too much emphasis is placed on benchmarking this non standard architecture against previous results and it is unclear whether the decreased training capacity could be beneficial for this task.
+
 
 
 \subsection*{References}

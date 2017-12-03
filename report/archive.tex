@@ -111,3 +111,21 @@ number of mult-adds not equal to performance i.e. irregular sparsity creates bot
 Note that no network compression techniques will be experimented with. This decision was made as networks for hand-orientation or hand-pose estimation tasks tend to be fairly shallow. I deemed it to be more beneficial to focus on latency alone and SqueezeNets provide a very low latency option due to the lack of fully-connected layers.\\
 
 Also, it is a well known result that memory compression techniques can reduce model size without lowering performance drastically. As the focus of this work is not merely to train the lowest possible latency model, but also to generally test convolutional methods on a dataset which has previously only had ML-RF techniques performed it, it is not beneficial to focus too much on model compression and showing a well known results again. That is I prefer to experiment with CNNs designed for low latency rather than generic model compression techniques.\\
+
+
+
+
+
+
+
+Strong results were achieved with the vanilla CNN using standard convolutions, with errors typically ranging between 3 and 7 degrees for both azimuth and elevation angles. This is a significant improvement on the 12 degrees average error achieve by the ML-RF techniques in [17]. \\
+
+These strong results exist in a large part of hyperparameter space and a largely driven by structural aspect of the network. Not using layer-wise batch normalization provided the first major improvements, as the normalization was unstable due to the small batch size required by the input generator for memory management. In fact, some configurations diverged to produce errors of over 180 degrees.\\
+
+Surprisingly, using pooling which intuitively was a poor choice due to loss in spatial information. This loss in spatial information was however limited due to the small kernel sizes which achieved these results. However, the there was no discernible difference in performance when pooling layers were removed from the low resolution part of the network, where the kernels were largest relative to the size of the image. \\
+
+SqueezeNets achieved equally strong results and again was very stable in hyperparameter space but showed instability to certain structural changes. For instance, larger, deeper models, specifically the structure as in the original implementation of SqueezeNet sometimes showed wild, divergent properties. The optimal structure deviated far from the original implementation, with only 3-4 fire modules and no pooling. \\
+
+The results across all models beat benchmarks set in [17] significantly. This is not surprising given the increase in sophistication of methods. It is clear that using network structure similar to that which achieves state of the art results in hand pose estimation tasks can too allow great gains in accuracy in this particular hand orientation task. \\
+
+The usefulness of low latency fire modules and depthwise separable convolutions 
