@@ -1,0 +1,28 @@
+trainingInput:
+  hyperparameters:
+    goal: MAXIMIZE
+    hyperparameterMetricTag: accuracy
+    maxTrials: 10
+    maxParallelTrials: 1
+    params:
+      - parameterName: kernel_size
+        type: INTEGER
+        minValue: 3
+        maxValue: 6
+        scaleType: UNIT_REVERSE_LOG_SCALE
+      - parameterName: filters
+        type: INTEGER
+        minValue: 2
+        maxValue: 40
+        scaleType: UNIT_REVERSE_LOG_SCALE
+      - parameterName: top_neurons
+        type: INTEGER
+        minValue: 12
+        maxValue: 500
+        scaleType: UNIT_REVERSE_LOG_SCALE
+      - parameterName: dropout
+        type: DOUBLE
+        minValue: 0.1
+        maxValue: 0.6
+        scaleType: UNIT_REVERSE_LOG_SCALE
+
