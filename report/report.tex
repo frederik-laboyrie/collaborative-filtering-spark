@@ -350,6 +350,8 @@ Structural changes were not as strictly defined and developed during the experim
 Latency will also be taken into consideration which will be measured by how many seconds taken to generate predictions on the entire original dataset on an i5 CPU***. Latency will of course be measured on the best performing models in terms of accuracy, but it will be necessary to understand for each model type how sensitive accuracy is to latency. Therefore latency will also have be tested on a significant part of parameter space. MAYBE not official measure of success just worth knowing cos don't know if will be on the cusp of real-time + other things to slow like preprocessing\\
 
 \section{Results}
+
+\subsection{Main Results}
 \begin{table}[h!]
   \begin{center}
     \caption{Results}
@@ -378,8 +380,28 @@ Training was very unstable and many configuration would get stuck early on in tr
 
 Memory management was also troublesome during the training process and batch size had to be reduced to 1 for certain configurations and some configurations did not even compile due to running out of memory. Low batch did not allow full utilisation of the parallel processing capabilities of GPU and the long training times meant limited number of epochs were feasible. An epoch would last anywhere between 2-5 hours for most configurations. \\
 
+\subsection{In depth analysis of training process}
+It was often the case that models with similar parameters would show wildly different properties in terms of loss. This is demonstrated in this section by looking at the training of two Vanilla CNNs. One showed strong convergent properties and the other divergent properties as shown in figure \ref{fig:loss}. These models had parameters ............. and identical structure and data preprocessing. The poor model's loss never approaches the good model's loss first epoch loss even.\\
 
-\subsection*{Discussion}
+Looking at the histogram distribution of kernel and bias parameters in conv2d\_1 which is the first full resolution layer as seen in figure \ref{fig:multiinput}. The good model's parameters in figure \ref{fig:goodearlyweights} are in fact fairly similar to those in the bad model as shown in \ref{fig:badearlyout} as they are both fairly evenly distributed around 0. \\
+
+However, when looking at the outputs from these layers as shown for the good model in figure \ref{fig:goodearlyout} and the poor model in figure \ref{fig:badearlyout} there is a clear difference. The poor model's outputs get stuck below 0 whereas the good model's outputs remain distributed around 0. My choice of activation function being LeakyReLU in part was to prevent situations like this, and in fact the LeakyReLUs were parametrised to be especially leaky with $\alpha$ being 0.1, meaning negative values are not culled completely and allowed to flow. This is also true of the selection of ADAM as an adapative learning rate to help the model escape such traps during training.\\
+
+Although literature suggests the He initialisation is more theoretically sound for ReLUs, Xavier intialisation was strictly better performing for this better task. Although, the results would suggest otherwise, my initialisation strategy may be in part to blame for these divergent properties. It is difficult to do much more than speculate however given that Xavier outperformed He overall in this task. \\
+
+These primarily negative outputs were shown in most other convolutional layers for the poor performing model. Looking at the implications this has for the dense, fully-connected layers later on in the network it is possible to gain further insight into the training process. These are showing in figures \ref{fig:gooddenseout} and \ref{fig:baddenseout} for the good and poor model respectively. \\
+
+There is a clear divergent, negative drift of the dense units' biases, showing there is no major corrective event during the training process. In addition to this, looking at the output from the dense layer for poor model in figure \ref{fig:baddenseout} as compared to the good model, the poor model again shows an extremely negatively scewed distribution compared to the good model. There is also a shock event in the 7th epoch as the weights collapse to extremely negative value.\\
+
+It is difficult to pinpoint the exact reason for this and why other models were resilient to this shock event. It is possibily an over reaction as other filters are unable to pick up on features and there was perhaps some conversion artefacts that caused this, but this is merely speculation. \\
+
+Add what we learn from this and how this is likely cause, and tblogs were not gathered for other models during training
+
+todo images of well done angles + speed tests
+
+\section{Discussion}
+
+
 
 Although I failed to improve on the results in [17], my training framework was fairly generic and there is certainly space for future work to build on the architectures put forward in this work. For example, instead of the medium resolution network the contour distance features could be fed to a 1D CNN. This may take advantage of the multi-input architecture more. \\
 
@@ -426,6 +448,12 @@ NETWORKS
 \end{enumerate}
 
 \begin{figure}[h]
+  \includegraphics[width=\linewidth]{loss.pdf}
+  \caption{Training of loss of two vanilla CNNS with similar hyperparameters}
+  \label{fig:loss}
+\end{figure}
+
+\begin{figure}[h]
   \includegraphics[width=\linewidth]{goodearlyweights.pdf}
   \caption{Convolutional layer bias and kernel parameter histograms for well performing model}
   \label{fig:goodearlyweights}
@@ -448,6 +476,7 @@ NETWORKS
   \caption{Convolutional layer output value histograms for poorly performing model}
   \label{fig:badearlyout}
 \end{figure}
+has bad epoch
 
 \begin{figure}[h]
   \includegraphics[width=\linewidth]{gooddense.pdf}
