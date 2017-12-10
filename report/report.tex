@@ -399,6 +399,49 @@ Add what we learn from this and how this is likely cause, and tblogs were not ga
 
 todo images of well done angles + speed tests
 
+\subsection{Analysis of successful and unsuccessful examples}
+\begin{table}[h!]
+  \begin{center}
+    \caption{Successful Vanilla CNN error breakdown}
+    \label{tab:tablebreakdown}
+    \begin{tabular}{l|l|l|l|l}
+      \textbf{} & \textbf{Mean $\zeta$} &  \textbf{Std $\zeta$} & \textbf{Mean $\epsilon$} &  \textbf{Std $\epsilon$}  \\
+      \hline
+      Successful Azimuth Set & 19.76$^{\circ}$ & 11.64$^{\circ}$& 13.27$^{\circ}$ & 11.03$^{\circ}$ \\
+      Successful Elevation Set & 18.18$^{\circ}$  & 15.78$^{\circ}$ & 12.92$^{\circ}$ & 8.12$^{\circ}$\\
+      Unsuccessful Azimuth Set & 17.51$^{\circ}$ & 9.75$^{\circ}$ & 19.38$^{\circ}$ & 9.76$^{\circ}$\\
+      Unsuccessful Elevation Set & 19.51$^{\circ}$  & 10.51$^{\circ}$& 25.15$^{\circ}$ & 9.87$^{\circ}$\\
+    \end{tabular}
+  \end{center}
+\end{table}
+
+In this section, I do not analyse the results of the unsuccessful models as detailed in section 5.2 as these models resulted in a constant predictor and so analysing any distribution of angles related to the errors is meaningless as it would only reflect the distribution of the dataset in relation to the constant value. However, I do split the examples into those which were classified successfully, that is below 5 $^{\circ}$, and unsuccessful, that is above 15$^{\circ}$. \\
+
+Looking at table \ref{tab:tablebreakdown} there are several expected, and generic, observations worth highlighting. First, the mean absolute zenith angle is generally larger for the unsuccesfully predicted examples. This of course even more the case for those in the unsuccessful zenith set. Looking at examples in figure 7 \ref{fig:badz} it becomes obvious why such examples are challenging to predict without depth information. These are those where there is little azimuth rotation to leaving less information for the model to infer about elevation except distortion of the general hand shape. \\
+
+Table \ref{tab:tablebreakdown} shows that the standard deviation of the unsuccessful azimuth angles is similar to those of the successful examples. This again shows that the elevation angles were just generally larger as a whole.
+
+
+
+
+\begin{figure}[h]
+ \hspace*{0cm}
+  \includegraphics[scale=0.6]{goodz.pdf}
+   \vspace*{-21mm}
+  \caption{Examples succesfully predicted by model}
+  \label{fig:goodz}
+
+\hspace*{0cm}
+  \includegraphics[scale=0.6]{badz.pdf}
+  \vspace*{-18mm}
+  \caption{Examples unsuccesfully predicted by model}
+  \label{fig:badz}
+
+\end{figure}
+
+
+
+
 \section{Discussion}
 
 
