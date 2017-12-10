@@ -415,14 +415,6 @@ todo images of well done angles + speed tests
   \end{center}
 \end{table}
 
-In this section, I do not analyse the results of the unsuccessful models as detailed in section 5.2 as these models resulted in a constant predictor and so analysing any distribution of angles related to the errors is meaningless as it would only reflect the distribution of the dataset in relation to the constant value. However, I do split the examples into those which were classified successfully, that is below 5 $^{\circ}$, and unsuccessful, that is above 15$^{\circ}$. \\
-
-Looking at table \ref{tab:tablebreakdown} there are several expected, and generic, observations worth highlighting. First, the mean absolute zenith angle is generally larger for the unsuccesfully predicted examples. The std of these angles is similar to those of the successful examples showing again the set generally shows larger azimuth angles. 
-This is unsurprisingly shown to a stronger degree by those in the unsuccessful azimuth set. \\
-
-Looking at examples in figure \ref{fig:badz} it becomes obvious why such examples are challenging to predict without depth information. These are those where there is little azimuth rotation to leaving less information for the model to infer about elevation except distortion of the general hand shape. \\
-
-
 \begin{figure}[h]
  \hspace*{0cm}
   \includegraphics[scale=0.6]{goodz.pdf}
@@ -440,10 +432,39 @@ Looking at examples in figure \ref{fig:badz} it becomes obvious why such example
 
 
 
+In this section, I do not analyse the results of the unsuccessful models as detailed in section 5.2 as these models resulted in a constant predictor and so analysing any distribution of angles related to the errors is meaningless as it would only reflect the distribution of the dataset in relation to the constant value. However, I do split the examples into those which were classified successfully, that is below 5 $^{\circ}$, and unsuccessful, that is above 15$^{\circ}$. \\
+
+Looking at table \ref{tab:tablebreakdown} there are several expected, and generic, observations worth highlighting. First, the mean absolute zenith angle is generally larger for the unsuccesfully predicted examples. The std of these angles is similar to those of the successful examples showing again the set generally shows larger azimuth angles. 
+This is unsurprisingly shown to a stronger degree by those in the unsuccessful azimuth set. \\
+
+Looking at examples in figure \ref{fig:badz} it becomes obvious why such examples are challenging to predict without depth information. These are those where there is little azimuth rotation to leaving less information for the model to infer about elevation except distortion of the general hand shape. \\
+
+
+\subsection{Speed Checks}
+In this section I do not perform a general comparison of latency against performance. These general comparisons are available in SqueezeNets' [] and MobileNets' [] original papers. Further to this, my training results were very unstable as shown in 5.2 and so would not give a meaningful comparison of latency and performance, as I am not giving up latency for performance as some larger models performed significantly worse than smaller models. \\
+
+This section rather aims to show the suitability of the best performing models for real-time application. In this way, this section aims to confirm my generic preference for smaller models during the training process and whether it has resulted in fast enough models, capable of serving predictions at a smooth frame rate (30 FPS).\\
+
+\begin{table}[h!]
+  \begin{center}
+    \caption{Performance of Best Performing Models}
+    \label{tab:speed}
+    \begin{tabular}{l|l|l|l}
+      \textbf{} & \textbf{Vanilla CNN} &  \textbf{SqueezeNet} & \textbf{MobileNet}  \\
+      \hline
+      Examples predicted per second & 56.8 & - & - \\
+      Model Size & 96.9 MB  & - & - \\
+      Number of Parameters & 8,070,794 & - & -\\
+    \end{tabular}
+  \end{center}
+\end{table}
+
+Table \ref{tab:speed} shows that all the models are more than capable of serving predictions in real-time. However, due to the models being multiresolution the prediction serving has other processes besides producing output from the three different resolution images. The raw input from the camera first has to be resized to the three resolutions, converted to grayscale and the pixel values to be scaled between 0 and 1 which is a significant process in itself.
+
 
 \section{Discussion}
 
-
+dualcamera
 
 Although I failed to improve on the results in [17], my training framework was fairly generic and there is certainly space for future work to build on the architectures put forward in this work. For example, instead of the medium resolution network the contour distance features could be fed to a 1D CNN. This may take advantage of the multi-input architecture more. \\
 
