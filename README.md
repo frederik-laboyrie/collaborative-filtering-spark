@@ -1,6 +1,6 @@
 ## Hand orientation inference
 **Project summary**  
-Experiments with multiresolution CNN architectures for hand orientation inference  
+Multiresolution vanilla CNN, SqueezeNet and MobileNet architectures used for hand orientation inference.
 
 **Libraries**  
 Keras 2.0+  
