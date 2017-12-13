@@ -415,6 +415,36 @@ todo images of well done angles + speed tests
   \end{center}
 \end{table}
 
+\begin{table}[h!]
+  \begin{center}
+    \caption{Successful MobileNet error breakdown}
+    \label{tab:tablebreakdown}
+    \begin{tabular}{l|l|l|l|l}
+      \textbf{} & \textbf{Mean $\zeta$} &  \textbf{Std $\zeta$} & \textbf{Mean $\epsilon$} &  \textbf{Std $\epsilon$}  \\
+      \hline
+      Successful Azimuth Set & 16.34$^{\circ}$ & 11.29$^{\circ}$& 17.59$^{\circ}$ & 9.04$^{\circ}$ \\
+      Successful Elevation Set & 19.27$^{\circ}$  & 12.44$^{\circ}$ & 19.34$^{\circ}$ & 12.14$^{\circ}$\\
+      Unsuccessful Azimuth Set & 14.75$^{\circ}$ & 11.82$^{\circ}$ & 13.28$^{\circ}$ & 10.73$^{\circ}$\\
+      Unsuccessful Elevation Set & 14.74$^{\circ}$  & 11.58$^{\circ}$& 20.07$^{\circ}$ & 11.10$^{\circ}$\\
+    \end{tabular}
+  \end{center}
+\end{table}
+
+\begin{table}[h!]
+  \begin{center}
+    \caption{Successful SqueezeNet error breakdown}
+    \label{tab:tablebreakdown}
+    \begin{tabular}{l|l|l|l|l}
+      \textbf{} & \textbf{Mean $\zeta$} &  \textbf{Std $\zeta$} & \textbf{Mean $\epsilon$} &  \textbf{Std $\epsilon$}  \\
+      \hline
+      Successful Azimuth Set & 15.86$^{\circ}$ & 12.33$^{\circ}$& 14.60$^{\circ}$ & 8.39$^{\circ}$ \\
+      Successful Elevation Set & 19.01$^{\circ}$  & 10.75$^{\circ}$ & 14.76$^{\circ}$ & 11.14$^{\circ}$\\
+      Unsuccessful Azimuth Set & 18.00$^{\circ}$ & 10.90$^{\circ}$ & 22.18$^{\circ}$ & 10.06$^{\circ}$\\
+      Unsuccessful Elevation Set & 20.20$^{\circ}$  & 12.13$^{\circ}$& 18.99$^{\circ}$ & 11.43$^{\circ}$\\
+    \end{tabular}
+  \end{center}
+\end{table}
+
 \begin{figure}[h]
  \hspace*{0cm}
   \includegraphics[scale=0.6]{goodz.pdf}
@@ -452,9 +482,9 @@ This section rather aims to show the suitability of the best performing models f
     \begin{tabular}{l|l|l|l}
       \textbf{} & \textbf{Vanilla CNN} &  \textbf{SqueezeNet} & \textbf{MobileNet}  \\
       \hline
-      Examples predicted per second & 56.8 & - & - \\
-      Model Size & 96.9 MB  & - & - \\
-      Number of Parameters & 8,070,794 & - & -\\
+      Examples predicted per second & 56.8 & 54.3 & 41.6 \\
+      Model Size & 96.9 MB  & 0.45 MB & 0.28 MB \\
+      Number of Parameters & 8,070,794 & 13,559 & 9,155\\
     \end{tabular}
   \end{center}
 \end{table}
