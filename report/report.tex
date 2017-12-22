@@ -283,8 +283,8 @@ Also, using a fairly complex network structure on an intricate task with a fairl
 
 Add dropout
 
-\section{Evaluation and Training Configuration}
-\subsection{Dataset}
+\subsection{Training Configuration}
+\subsubsection{Dataset}
 The dataset used is the same which is collected by Asad in [17]. The dataset consists of 9717**** RGB images of 13 different participants hands against a plain background. Ground truth orientation is inferred by simultaneously capturing depth images of the participants' hands using a Kinect sensor. The plane that implicitly sits across the 3D point cloud is calculated using the RANSAC algorithm on these coordinates. From this plane equation the normal vector can be calculated as the transpose of the x, y and z components of the plane equation. These inverse cosine of these x and y components are used to calculate the azimuth and elevation angles which provide the ground truth labels for training. Formally, as shown in [1], this is:
 
 \[\emph{$n_{0}$} =  \emph{$xn_{x}$} + \emph{$yn_{y}$} + \emph{$zn_{z}$}\]
@@ -299,14 +299,14 @@ RANSAC is well suited to this task as it takes a random sample of points in each
 
 In [17] a painting game was also developed during the data collection process, where a user is given feedback showing how much of the orientation space they have managed to fill with sufficient samples. This was in response to earlier datasets which had inconsistencies and gaps in orientation space as users failed to provide sufficient examples for the entirety of orientation space. This then provides a consistent and balanced dataset already from the collection phase and does not require and post-processing to balance the dataset.
 
-\subsection{Error Metric}
+\subsubsection{Error Metric}
 The networks are configured to output both the elevation and azimuth angle. This obviously has the benefit of these error signals being able to propagate back through the network separately. As in [17] we analyse the error of each of these angles separately in order to understand the performance of the models. It was typical in [1]'s experiments that certain examples would perform well in one angle but be unable to gain accuracy in the other angle.\\
 
 In order to compare results with [17], both error metrics are adopted. Mean average error (of azimuth and elevation angles) and combined mean average error (MAE and CMAE hereafter).
 
 Add figure of azimuth and elevation. + taking mean implicit
 
-\subsection{Software Configuration}
+\subsubsection{Software Configuration}
 All models were built using Keras, which is a high level API for constructing neural networks. It uses other frameworks for backends. For this work TensorFlow was selected as this is support on Google Cloud ML Engine. \\
 
 Standard convolutional layers and fully-connected, or dense, layers are obviously supported in the base library. The components which make up SqueezeNets and MobileNets are not part of the base library and had to be implemented separately. \\ 
@@ -317,7 +317,7 @@ A similar approach was taken to implement SqueezeNets. The base building blocks,
 
 Testing was done by ensuring pixel values and label values were within a strict range at all parts of the pipeline. Network configuration was tested visually using TensorBoard. This shows the exact shape of the graph along with histograms of the weights during training. This  allows confirmation that the network architecture is correct in addition to whether any of the modules are behaving problematically, as the distribution of the weights may be abnormal.
 
-\subsection{Training Pipeline Configuration}
+\subsubsection{Training Pipeline Configuration}
 To streamline the training pipeline all image resizing and grayscaling was performed locally beforehand and the various resolutions were then kept on cloud storage so the correct image formats could be served directly to the models during training. This had to be performed in batches to avoid generating a graph of over TensorFlow's 2GB limit, as the resizing was done using TensorFlow's preprocessing module. \\
 
 This leaves only an input generator, which simultaneously performs samplewise standard deviation normalisation, along with the actual training of the model in the pipeline.
@@ -332,7 +332,7 @@ A particular good example of this is that due to the small batch size required t
 By removing layer-wise batch normalization the model showed strong stability and low test error variance over a variety of hyperparameters and is discussed more in depth in results.  But it is still worth highlighting how the training pipeline configuration influenced the structure of the model. \\
 
 
-\subsection{Optimization Strategy}
+\subsubsection{Optimization Strategy}
 
 Hyperparameter tuning will be performed using Google Cloud ML Engine's implementation of Bayesian optimization on a fixed range of parameters. Bayesian optimization is an alternative to a naive grid search which allows a more efficient exploration of hyper parameter space. Naive grid search wastes a great amount of computation on calculating performance in area of parameter space which is unlikely to yield optimal results.\\
 
@@ -523,8 +523,18 @@ Table \ref{tab:speed} shows that all the models are more than capable of serving
 
 \section{Discussion}
 
+
+There are several other benchmarks that I believe would be worthwhile in comparing the aptitude of these architectures. For example, using images with depth information instead of purely RGB would possible allow these architectures to perform much better compared to the ML-RF technique. This is because still only the CNNs would be able to utilise the non-contour pixels, which now would contain more meaningful depth information compared to just skin colour. This would be a reasonable comparison to make as depth perception is becoming increasing commonly in modern handheld devices. \\
+
+Before undertaking modelling on depth information, it would be of worth to understand whether the multiresolution aspect of these architectures provides a significant, if any, increase in discriminatory power. This would be of value both for RGB and depth images. This would be a trivial additional experiment, and in hindsight a valuable one for this particular work where all the models achieved such similar performance. \\
+
+I also would now value having more variation in input. 
+
 Given the fact that so many models failed to converge, I am hopeful that better results could have been gained if a more extensive hyperparameter optimization strategy could have been implemented. The possibility of implementing this was largely impeded  by memory management which was troublesome during the training process. Batch size had to be set to one for certain configuration to even compile. In addition to this, as garbage collection is not instantaneous, those configurations which did compile would often fail later on in training whilst storing intermediate results. This forced me to set batch size to 1 for all experiments in order to ensure the job would finish. This did not allow full utilisation of the parallel processing capabilities of GPU and lengthened training time with some epochs for larger configurations lasting over one hour. It was then unfeasibly costly to perform significantly more extensive hyperparameter optimization. \\
 
+
+
+Many modern phones have some form of depth perception. It would be bene
 
 Although I failed to improve on the results in [17], my training framework was fairly generic and there is certainly space for future work to build on the architectures put forward in this work. For example, instead of the medium resolution network the contour distance features could be fed to a 1D CNN. This may take advantage of the multi-input architecture more. \\
 
