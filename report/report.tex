@@ -146,11 +146,11 @@ Note this compression factor does not improve latency as it is just an efficient
 \subsubsection{Learning-Based Network Compression}
 Other compression techniques are learning based and are separate for the more architectural compression techniques previously described. These techniques are generally referred to as knowledge distillation [12]. This technique works by building an objective function based on softmax layer output of a larger network, or several networks, as training labels. The correct labels can also be used in a second objective function but in [12] it was shown that the best accuracy is gained if a very low weight is put on this objective function.\\
 
-The softmax distribution is parametrised using temperature as follows:
+The softmax distribution is calculated as follows:
 
-\[qi = \frac{exp(z_i/T)}{\sum_j exp(z_j/T)}\]
+\[q_i = \frac{exp(z_i/T)}{\sum_j exp(z_j/T)}\]
 
-Typically a high temperature is used which causes a softer distribution where the probabilities are spread over more classes. This is where the benefit of knowledge lies as the softmax layer can store information about similarity between classes that would not be stored in a simple one-hot layer.\\
+The probability $q_i$ is calculated by calculating the logit outout $z$ of each class. These logits are parametrised by the temperature parameter, $T$, where a larger temperature is used to cause a softer distribution where the probabilities are spread over the classes more. This is where the benefit of knowledge lies, as the softmax layer can store information about similarity between classes that would not be stored in a simple one-hot layer which is binary.\\
 
 In [12] this technique is also scaled using ensembles of specialist models on Google's JFT dataset. This dataset has over 15,000 labels showing very clear benefits of training specialist models. This is because in Google's JFT dataset the softmax output of the larger model would naturally contain information useful for training. For instance, the distilled model will be training off the softmax output of another model and the binary labels. In this way, all dog labels may have a fairly high output value, so when the distilled model is training on a particular breed, it can use this softmax distribution to infer which general area of label space an example may be. The original larger model could only use the binary labels and had to use its larger training capacity to infer this information. \\
 
@@ -222,10 +222,9 @@ SqueezeNets were described briefly in the literature review section. A more deta
   \label{fig:dwconvolution}
 \end{figure}
 
-***inception towers
-Fire modules allow for great parameter efficiency whilst still retaining larger activation maps within a layer. The squeeze layer in a Fire module is comprised of solely 1x1 filters. Typically, there are few filters in the squeeze layer in order to restrict the number of input channels to the expand layer. Of course, as the number of parameters in the expand layer is both dependent on the dimensionality of the filters and the number of input channels, this will reduce the overall cost of any given configuration of filters within an expand layer. Note the 1x1 convolutions in the squeeze layer also have the more generic benefit of having quadratically fewer parameters than filters as the width and height grow. \\
+Fire modules allow for great parameter efficiency whilst still retaining larger activation maps within a layer. The squeeze layer in a Fire module is comprised of solely 1x1 filters. 1x1 filters are shown in figure x and are essentially a simple reweighting. As Fire modules are largely inspired by Inception modules [34], the 1x1 filters serve a sophisticated purpose rather than simple reweighting. If there a fewer 1x1 filters than the number of feature maps they are convolving over, then the network is forced to learn condensed embeddings of the feature maps emanating from the larger filters. 1x1 filters also have the more generic benefit of having few parameters as the number of parameters in a filter grow quadratically with height and width of the filter.\\
 
-The expand layer consists of 1x1 and 3x3 convolutional filters which can produce more expressive feature maps. With the expand layer the size of feature maps can be relatively large and then in conjunction with the squeeze layers the number of parameters can be reduced quickly at each layer. This benefit is utilised by expanding the output from the squeeze layer in all the layers quite heavily in the early layers and only reducing the amount of expansion, which in effect is the amount of downsampling, until much later in the network which increases accuracy as the output maps remain large for longer.\\
+Fire modules strictly enforce the dimensionality reduction benefit of 1x1 filters by the squeeze layer having fewer filter than the expand layer. The expand layer consists of 1x1 and 3x3 convolutional filters which can produce more expressive feature maps. Expand layers can produce large, expensive feature maps but the squeeze layers can quickly reduce the number of parameters, only retaining the most important information. This benefit is utilised by expanding the output from the squeeze layer in all the layers quite heavily in the early layers and only reducing the amount of expansion, which in effect is the amount of downsampling, until much later in the network which increases accuracy as the output maps remain large for longer.\\
 
 The design of fire modules then provides three hyperparameters. The number of 1x1 filters in the squeeze layer, the number of 1x1 filters in the expand layer and the number of 3x3 filters in the expand layer. How these hyperparameters change throughout the network is controlled by metaparameters. \emph{Freq} is a metaparameter which is the number of layers before the number of expand filters is increased by \emph{incr}. These both scale the /emph{base} metaparameter which set the number of filters in the first expand layer. As the expand filters increases, the number of squeeze filters is controlled by \emph{squeeze ratio} so the number of squeeze filters can increase at the same rate. The percentage of 1x1 filters compared to 3x3 filters within an expand layer is controlled by another metaparameter \emph{pct 3x3}. \\
 
@@ -281,8 +280,7 @@ This problem can cause large parts of the network to die and results in relative
 
 Also, using a fairly complex network structure on an intricate task with a fairly small dataset, particular attention must be paid to the initialization strategy of the network weights. The efficacy of weight intialization and its ability to allow convergence of deep networks was brough to the forefront in [22] with Xavier intialization. For ReLUs, however, the optimal weight strategy of giving weights variance of $1/N$ (where N is the number of units in a layer) was shown not to hold true. Specifically, in [24] it is shown that the optimal variance weights in ReLU based networks is in fact $2/N$ and in many cases networks fail to converge under Xavier intialization. This is not merely empirically observed but the result is rigorously proved in [23].\\
 
-Add dropout
-
+As a regularisation technique, as in to avoid overfitting to the training samples, dropout [33] will be used. This is a technique were any given unit in the neuron in the network will be present with probability $p$. Intuitively, this technique works as each unit in the network is having noise applied to it. During training, for any given iteration, only a certain subset of the neurons will be active. All connections in and out of inactive neurons will be set to zero temporarily. Then during testing the trained weights are scaled by $p$ and all neurons will be active. A higher $p$ of course related to a higher level of regularisation.
 \subsection{Training Configuration}
 \subsubsection{Dataset}
 The dataset used is the same which is collected by Asad in [17]. The dataset consists of 9717**** RGB images of 13 different participants hands against a plain background. Ground truth orientation is inferred by simultaneously capturing depth images of the participants' hands using a Kinect sensor. The plane that implicitly sits across the 3D point cloud is calculated using the RANSAC algorithm on these coordinates. From this plane equation the normal vector can be calculated as the transpose of the x, y and z components of the plane equation. These inverse cosine of these x and y components are used to calculate the azimuth and elevation angles which provide the ground truth labels for training. Formally, as shown in [1], this is:
@@ -387,7 +385,7 @@ Kernel size represents the width and height of the convolutional filters used. F
 
 The filters hyperparameter is simply the number of filters trained in any layer of any model. There were no restrictions as there were for the kernel size. \\
 
-Dropout is the proportion of neurons in the fully-connected layers which are excluded for each example during both the forward pass and backward pass. This is a standard regularization technique and is applied to both layers. \\ 
+Dropout is the probability of a neuron dropping out in the fully-connected layers of the networks. This regularisation technique was previously described in Section 3.2. \\ 
 
 Fully-connected neurons is the number of neurons in the first fully-connected layer. In each model, the second layer always contained half the amount of the first layer. \\
 
@@ -585,7 +583,12 @@ quantization and huffman coding. \emph{arxiv:1510.00149v3, 2015a}.
 NETWORKS
 \item Joyce, J. M. (2011). Kullback-leibler divergence. In \emph{International Encyclopedia of Statistical Science} (pp. 720-722). Springer Berlin Heidelberg.
 \item Deng, J., Dong, W., Socher, R., Li, L. J., Li, K., \& Fei-Fei, L. (2009, June). Imagenet: A large-scale hierarchical image database. In \emph{Computer Vision and Pattern Recognition}, 2009. CVPR 2009. IEEE Conference on (pp. 248-255). IEEE.
+\item Srivastava, N., Hinton, G. E., Krizhevsky, A., Sutskever, I., \& Salakhutdinov, R. (2014). Dropout: a simple way to prevent neural networks from overfitting. \emph{Journal of machine learning research}, 15(1), 1929-1958.
+\item Szegedy, C., Liu, W., Jia, Y., Sermanet, P., Reed, S., Anguelov, D., ... \& Rabinovich, A. (2015). \emph{Going deeper with convolutions}. In Proceedings of the IEEE conference on computer vision and pattern recognition (pp. 1-9).
+Chicago	
+
 \end{enumerate}
+
 
 \begin{figure}[h]
   \includegraphics[width=\linewidth]{loss.pdf}
