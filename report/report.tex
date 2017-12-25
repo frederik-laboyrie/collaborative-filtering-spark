@@ -281,9 +281,13 @@ This problem can cause large parts of the network to die and results in relative
 Also, using a fairly complex network structure on an intricate task with a fairly small dataset, particular attention must be paid to the initialization strategy of the network weights. The efficacy of weight intialization and its ability to allow convergence of deep networks was brough to the forefront in [22] with Xavier intialization. For ReLUs, however, the optimal weight strategy of giving weights variance of $1/N$ (where N is the number of units in a layer) was shown not to hold true. Specifically, in [24] it is shown that the optimal variance weights in ReLU based networks is in fact $2/N$ and in many cases networks fail to converge under Xavier intialization. This is not merely empirically observed but the result is rigorously proved in [23].\\
 
 As a regularisation technique, as in to avoid overfitting to the training samples, dropout [33] will be used. This is a technique were any given unit in the neuron in the network will be present with probability $p$. Intuitively, this technique works as each unit in the network is having noise applied to it. During training, for any given iteration, only a certain subset of the neurons will be active. All connections in and out of inactive neurons will be set to zero temporarily. Then during testing the trained weights are scaled by $p$ and all neurons will be active. A higher $p$ of course related to a higher level of regularisation.
+
+Adam [34] will be used as the optimization algorithm. Adam is gradient-based, adjusting the parameters with respect to the gradient of the loss and is widely accepted as a default optimization algorithm for deep learning applications. It is different to standard stochastic gradient descent as each parameter in the network, as in weights and biases, has its own learning rate which adapts during training. Per-parameter learning rates are not unique to Adam and Adam itself takes inspiration from two other per-parameter optimization methods, RMSProp and Adagrad. Adam's weight updates are calculated using the exponential moving average of the gradient and the squared gradients, which are estimates of the mean and variance of the gradient. \\
+
+These moving averages vectors are intialised as zeros which make this method particularly well-suited to problems with many parameters and sparse interactions, which is typically the case for computer vision applications. Further, it is particularly the case for this particular task where large areas of the background are completely irrelevant to the modeling process.
 \subsection{Training Configuration}
 \subsubsection{Dataset}
-The dataset used is the same which is collected by Asad in [17]. The dataset consists of 9717**** RGB images of 13 different participants hands against a plain background. Ground truth orientation is inferred by simultaneously capturing depth images of the participants' hands using a Kinect sensor. The plane that implicitly sits across the 3D point cloud is calculated using the RANSAC algorithm on these coordinates. From this plane equation the normal vector can be calculated as the transpose of the x, y and z components of the plane equation. These inverse cosine of these x and y components are used to calculate the azimuth and elevation angles which provide the ground truth labels for training. Formally, as shown in [1], this is:
+The dataset used is the same which is collected by Asad in [17]. The dataset consists of 9717 RGB images of 13 different participants hands against a plain background. Ground truth orientation is inferred by simultaneously capturing depth images of the participants' hands using a Kinect sensor. The plane that implicitly sits across the 3D point cloud is calculated using the RANSAC algorithm on these coordinates. From this plane equation the normal vector can be calculated as the transpose of the x, y and z components of the plane equation. These inverse cosine of these x and y components are used to calculate the azimuth and elevation angles which provide the ground truth labels for training. Formally, as shown in [1], this is:
 
 \[\emph{$n_{0}$} =  \emph{$xn_{x}$} + \emph{$yn_{y}$} + \emph{$zn_{z}$}\]
 
@@ -585,7 +589,10 @@ NETWORKS
 \item Deng, J., Dong, W., Socher, R., Li, L. J., Li, K., \& Fei-Fei, L. (2009, June). Imagenet: A large-scale hierarchical image database. In \emph{Computer Vision and Pattern Recognition}, 2009. CVPR 2009. IEEE Conference on (pp. 248-255). IEEE.
 \item Srivastava, N., Hinton, G. E., Krizhevsky, A., Sutskever, I., \& Salakhutdinov, R. (2014). Dropout: a simple way to prevent neural networks from overfitting. \emph{Journal of machine learning research}, 15(1), 1929-1958.
 \item Szegedy, C., Liu, W., Jia, Y., Sermanet, P., Reed, S., Anguelov, D., ... \& Rabinovich, A. (2015). \emph{Going deeper with convolutions}. In Proceedings of the IEEE conference on computer vision and pattern recognition (pp. 1-9).
+Chicago
+\item Kingma, D., \& Ba, J. (2014). Adam: A method for stochastic optimization. \emph{arXiv preprint arXiv:1412.6980}.
 Chicago	
+
 
 \end{enumerate}
 
