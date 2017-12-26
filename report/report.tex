@@ -36,13 +36,13 @@ However, many challenges have plagued this task due to the complicated nature of
 
 It is largely for these reasons that complex architectures, such as those which focus on joints, as previously mentioned, but also those which take multiple inputs of varying resolutions in order to build a wider variety of features to aid the training process. Complex network architectures such as these do not lend well to low resource hardware as producing output becomes much more costly. Tasks such as hand orientation inference and hand pose estimation generally will be taking place in real time and the latency of a model is of concern along with accuracy. \\
 
-For this reason, my objective in this work is not only to develop network architectures inspired by recent advances in hand-related tasks but also to experiment with variations in these architectures which decrease latency. These variations will be driven by using alternatives to standard convolutional filters, which make up the mechanism through which CNNs extract features from pixel values. In this work, SqueezeNets [8] and MobileNets [1] will be used to provide architectural variations and will be evaluated on whether they can match the performance of a standard CNN.\\
+For this reason, my objective in this work is not only to develop network architectures inspired by recent advances in hand-related tasks but also to experiment with variations in these architectures which decrease latency. These variations will be driven by using alternatives to standard convolutional filters, which make up the mechanism through which CNNs extract features from pixel values. In this work, SqueezeNets [8] and MobileNets [1] will be used to provide architectural variations and will be evaluated on whether they can match the performance of a standard CNN. To clarify, models will be evaluated in average error along with latency in terms of the number of predictions the model can serve per second.\\
 
 I will be using an identical dataset as was used in [17], so I will be able to benchmark my results to those gained in [17]. It is therefore my aim to improve on the accuracy in [17], or at least match it if the resulting architecture used to gain results is amenable to low resource hardware. In this way, it also my aim for the standard CNNs performance to be matched by the performance of SqueezeNets [8] and MobileNets[1], the architectures developed for low resource hardware. \\
 
 It is a well known result for low latency architectures to have little to no loss in performance, but it is not known whether they are suitable for this intricate task as any spatial information being lost during the convolutions could potentially have large effects on the final accuracy.Nevertheless,it is worth highlighting that the primary challenge in this task will be able to build any architecture capable of picking up on the intricate spatial relations of hand positions rather than replicating a well known result of low latency networks not causing significant loss in performance. \\
 
-If successful, potential beneficiaries of the resulting models would be augmented reality and virtual reality developers for applications which aim to be viable to run on a wide array of hardware. The decrease computational complexity of these models compared to those achieving state-of-the-art accuracy, would allow them to utilise texture features extracted by convolutional filters, ideally increasing accuracy with neglibile loss in latency compared to ML-RF approaches. Then applications could be developed which could more easily project 3D images onto hands, or develop games which use the orientation of a hand to control the game environment.\\
+If successful, potential beneficiaries of the resulting models would be augmented reality and virtual reality developers for applications which aim to be viable to run on a wide array of hardware. The decrease computational complexity of these models compared to those achieving state-of-the-art accuracy, would allow them to utilise texture features extracted by convolutional filters, ideally increasing accuracy with negligible loss in latency compared to ML-RF approaches. Then applications could be developed which could more easily project 3D images onto hands, or develop games which use the orientation of a hand to control the game environment.\\
 
 As at the time of writing, newer high-end mobile devices tend to be built with binocular cameras or stand-alone depth sensors architectures. However, any model architectures put forward in this work could equally be trained using depth values in addition to RGB values or even training on depth values alone. It is therefore not necessary to discount the possibility of using these architectures on devices which are capable of deriving depth information. \\
 
@@ -200,9 +200,16 @@ It is worth noting that in a strict mathematical sense, a convolution operation 
 
 Using kernels makes convolutional neural networks much more parameter efficient than fully-connected networks as they allow sparse interactions as there is not a parameter connecting each input unit with each output unit. However, as convolutional networks typically work with very high dimensional input, as in images with thousands of pixels, the cost of convolutional neural networks can still be very high overall. \\
 
-Further, latency of convolutional neural networks increases drastically as kernel sizes increase and the number of required mult-adds increases near quadratically. This is the case with standard convolutions where one kernel of a given size produces output for each x coordinate, y coordinate and input channel. Techniques to reduce latency and model size using different convolution techniques is discussed at length in Section 2.2. \\
+Further, latency of convolutional neural networks increases drastically as kernel sizes increase and the number of required mult-adds increases near quadratically. This is the case with standard convolutions where one kernel of a given size produces output for each x coordinate, y coordinate and input channel. Techniques to reduce latency and model size using different convolution techniques are discussed at length in Section 2.2. \\
 
-Typically these convolutional operations are followed by pooling operations which reduce the size of the feature maps. For example, a max pooling operation would just take the largest value in a matrix. Any aggregate function can be used, however, such as an average. This both has the effect of producing condensed, summarised representations of the feature maps, which allows higher-order features to be convolved on in later layers, but also it provides invariance to translation. Intuitively, this is not a feature that is beneficial in hand orientation inference where the location of a feature, such as an edge, is of the utmost importance in determining the orientation. \\
+Typically these convolutional operations are followed by pooling operations which reduce the size of the feature maps. For example, a max pooling operation would just take the largest value from a given area of a matrix. For example, 2x2 max pooling which downsamples feature maps to half of their original size is shown in figure \ref{fig:maxpool} Any aggregate function can be used, however, such as an average. This both has the effect of producing condensed, summarised representations of the feature maps, which allows higher-order features to be convolved on in later layers, but also it provides invariance to translation. Intuitively, this is not a feature that is beneficial in hand orientation inference where the location of a feature, such as an edge, is of the utmost importance in determining the orientation. \\
+
+
+\begin{figure}
+  \includegraphics[width=\linewidth]{maxpool.pdf}
+  \caption{A 2x2 max pooling operation on a 4x4 matrix}
+  \label{fig:maxpool}
+\end{figure}
 
 It is also possible to downsample during the convolution phase. This is done by setting a stride greater than 1. So in the previous example where the kernel is applied to every possible combination of units from the input, then if the stride is set to 2 it would 2 pixels across, not 1, when applying the kernel to following set of units. This has the effect of lowering the dimensionality of the following feature map but does not aid in building higher level features as pooling does.\\
 
@@ -210,8 +217,7 @@ It is most typical for a convolutional neural network to be comprised of alterna
 
 In [27] it is noted that convolutional neural networks have played a significant role in bring deep learning into the forefront of machine learning generally by allowing great advances in accuracy, solving many commercial applications and winning many contests. [27] states that is not completely clear the exact reason that convolutional neural networks were able to achieve such great improvement in accuracy.\\ 
 
-Advances in 2012 when Khrizhevsky won ImageNet by training a deep convolutional neural network on a GPU allowed great improvements in training time which of course allows for more efficient parameter tuning. It would be unreasonable to attribute all of their success to this and other architectural advances have allowed for training of much deeper networks which are generally easier to train without diverging. One example of these architectural advances are residual connections which allow feature maps to skip layers and makes training more robust because... . These were popularies in [....] but are seen as a variation in training in other works, most relevant to this work is in SqueezeNets [27] original experiments.
-[p.350 DL]
+Advances in 2012 when Khrizhevsky won ImageNet by training a deep convolutional neural network on a GPU allowed great improvements in training time which of course allows for more efficient parameter tuning. It would be unreasonable to attribute all of their success to this and other architectural advances have allowed for training of much deeper networks which are generally easier to train without diverging [27]. One example of these architectural advances are residual connections which allow feature maps to skip layers and makes training more robust because they are easier to optimise as the residual mappings help avoid vanishing or exploding gradients . These were popularised in [36] but are seen as a variation in training in other works, most relevant to this work is in SqueezeNets' [8] original experiments.
 
 \subsubsection{SqueezeNets}
 SqueezeNets were described briefly in the literature review section. A more detailed description is necessary in order to fully understand the difference between the models that will be used in this work. Typical SqueezeNet architecture is comprised of Fire modules (figure 2) along with convolutional layers at the top and bottom of the network. The original SqueezeNet architecture consists of 8 Fire modules between the top and bottom convolutional layers. The features maps pass through global average pooling after the final convolutional layers before being passed to the output layer.\\
@@ -222,7 +228,14 @@ SqueezeNets were described briefly in the literature review section. A more deta
   \label{fig:dwconvolution}
 \end{figure}
 
+
 Fire modules allow for great parameter efficiency whilst still retaining larger activation maps within a layer. The squeeze layer in a Fire module is comprised of solely 1x1 filters. 1x1 filters are shown in figure x and are essentially a simple reweighting. As Fire modules are largely inspired by Inception modules [34], the 1x1 filters serve a sophisticated purpose rather than simple reweighting. If there a fewer 1x1 filters than the number of feature maps they are convolving over, then the network is forced to learn condensed embeddings of the feature maps emanating from the larger filters. 1x1 filters also have the more generic benefit of having few parameters as the number of parameters in a filter grow quadratically with height and width of the filter.\\
+
+\begin{figure}[h]
+  \includegraphics[width=\linewidth]{convonebyone.pdf}
+  \caption{A 1x1 convolution on a 3x3 matrix}
+  \label{fig:conv1x1}
+\end{figure}
 
 Fire modules strictly enforce the dimensionality reduction benefit of 1x1 filters by the squeeze layer having fewer filter than the expand layer. The expand layer consists of 1x1 and 3x3 convolutional filters which can produce more expressive feature maps. Expand layers can produce large, expensive feature maps but the squeeze layers can quickly reduce the number of parameters, only retaining the most important information. This benefit is utilised by expanding the output from the squeeze layer in all the layers quite heavily in the early layers and only reducing the amount of expansion, which in effect is the amount of downsampling, until much later in the network which increases accuracy as the output maps remain large for longer.\\
 
@@ -234,7 +247,7 @@ More complex SqueezeNet architectures are also developed in [9] using residual c
 
 \subsubsection{MobileNets}
 
-MobileNets, like SqueezeNets, are fundamentally different to Vanilla CNNs due to their base convolutional layers which utilise 1x1 convolutions. In MobileNets' case these are depthwise separable convolutional layers. Depthwise separable convolutions are factorized convolutions which separate standard spatial convoltuions into depthwise convolutions followed by 1x1 pointwise convolutions.\\
+MobileNets, like SqueezeNets, are fundamentally different to Vanilla CNNs due to their base convolutional layers which utilise 1x1 convolutions. In MobileNets' case these are depthwise separable convolutional layers. Depthwise separable convolutions are factorized convolutions which separate standard spatial convolutions into depthwise convolutions followed by 1x1 pointwise convolutions.\\
 
 \begin{figure}[!b]
   \includegraphics[width=\linewidth]{separableconv.pdf}
@@ -242,10 +255,9 @@ MobileNets, like SqueezeNets, are fundamentally different to Vanilla CNNs due to
   \label{fig:dwconvolution}
 \end{figure}
 
-p. 350 dl
 For instance, a 2-dimensional kernel which can be expressed as an outer product of 2 vectors, one in the x direction and one in the y direction, would be a separable kernel. It is equivalent to perform convolutions using these 2 1-dimensional vectors and then combine their outputs using 1x1 pointwise convolutions. This technique scales to multi-dimensions, for instance when there are multiple feature maps deriving from different kernels. The efficiency gains in parameters are quadratic in that if you have \emph{d} dimensions and kernels which are \emph{w} units wide, the cost of convolution operation would be \emph{O($W^d$)} for separable convolution and \emph{O(W * d)} for standard convolutions. [27] \\
 
-A diagrammatic representation of a depthwise separable convolution is shown in figure 3. A standard convolution on the left hand side is applied to every input channel hence its depth. This is equivalent to convolving depthwise first and then multiplying these by 1x1 pointwise convolutions which allow the parameters to be applied to each input channel, or depth. An example depthwise separable convolution layer will contain multiple depthwise and pointwise convolutions and is shown diagrammatically in figure 4.\\
+A diagrammatic representation of a depthwise separable convolution is shown in figure \ref{fig:dwconvolution}. A standard convolution on the left hand side is applied to every input channel hence its depth. This is equivalent to convolving depthwise first and then multiplying these by 1x1 pointwise convolutions which allow the parameters to be applied to each input channel, or depth. An example depthwise separable convolution layer will contain multiple depthwise and pointwise convolutions and is shown diagrammatically in figure \ref{fig:dwconvolutionlayer}.\\
 
 \begin{figure}[h]
   \includegraphics[width=\linewidth]{dwlayer.pdf}
@@ -258,11 +270,11 @@ This has the advantage of having 8-9x fewer parameters as in a standard convolut
 
 It is important to note at this point that it is not of major use to purely put emphasis on number of parameters when measuring the efficiency of a model. This is because number of mult-adds does not necessarily scale uniformly with latency. On a per-module basis, that is number of parameters in a Fire module for example, number of parameters would of course scale fairly uniformly with latency. However, over an entire model for example, the number of mult-adds can be reduced using pruning. This creates a sparse model with bottlenecks and the latency of the model will not reduce at the same rate as number of mult-adds. [1] \\
 
-to add: The base structure for a MobileNet is a layer of full convolutions followed by depthwise separable convolutions all with ReLU activation functions. Batch normalisation and strided convolution downsampling is performed between each layer. Average pooling is then performed before output is passed to the fully-connected layers.\\
+The base structure for a MobileNet is a layer of full convolutions followed by depthwise separable convolutions all with ReLU activation functions. Batch normalisation and strided convolution downsampling is performed between each layer. Average pooling is then performed before output is passed to the fully-connected layers.\\
 
 
 \subsection{Network Architecture and Training}
-A multi-input architecture will be used, as is typical for many other works related to hand-orientation and hand-pose estimation. Specifically, a three input network where one network will take image sizes of 128x128, 64x64 and 32x32. The resultant feature maps of each network will be flattened and concatenated before being passed to fully-connected layers which sit on top of these networks. This structure is shown in figure 5.\\
+A multi-input architecture will be used, as is typical for many other works related to hand-orientation and hand-pose estimation. Specifically, a three input network where one network will take image sizes of 128x128, 64x64 and 32x32. The resultant feature maps of each network will be flattened and concatenated before being passed to fully-connected layers which sit on top of these networks. This structure is shown in figure \ref{fig:multiinput}.\\
 
 \begin{figure}[h]
   \centering
@@ -278,7 +290,7 @@ This problem can cause large parts of the network to die and results in relative
 
 [6] also points out that LeakyReLU units which were very leaky, as in they let more gradient through, outperformed less leaky ones which are more common. It is important to note, however, that the difference in performance between different rectified activation units in [6] is very marginal.\\
 
-Also, using a fairly complex network structure on an intricate task with a fairly small dataset, particular attention must be paid to the initialization strategy of the network weights. The efficacy of weight intialization and its ability to allow convergence of deep networks was brough to the forefront in [22] with Xavier intialization. For ReLUs, however, the optimal weight strategy of giving weights variance of $1/N$ (where N is the number of units in a layer) was shown not to hold true. Specifically, in [24] it is shown that the optimal variance weights in ReLU based networks is in fact $2/N$ and in many cases networks fail to converge under Xavier intialization. This is not merely empirically observed but the result is rigorously proved in [23].\\
+Also, using a fairly complex network structure on an intricate task with a fairly small dataset, particular attention must be paid to the initialization strategy of the network weights. The efficacy of weight intialization and its ability to allow convergence of deep networks was brought to the forefront in [22] with Xavier intialization. For ReLUs, however, the optimal weight strategy of giving weights variance of $1/N$ (where N is the number of units in a layer) was shown not to hold true. Specifically, in [24] it is shown that the optimal variance weights in ReLU based networks is in fact $2/N$ and in many cases networks fail to converge under Xavier intialization. This is not merely empirically observed but the result is rigorously proved in [23].\\
 
 As a regularisation technique, as in to avoid overfitting to the training samples, dropout [33] will be used. This is a technique were any given unit in the neuron in the network will be present with probability $p$. Intuitively, this technique works as each unit in the network is having noise applied to it. During training, for any given iteration, only a certain subset of the neurons will be active. All connections in and out of inactive neurons will be set to zero temporarily. Then during testing the trained weights are scaled by $p$ and all neurons will be active. A higher $p$ of course related to a higher level of regularisation.
 
@@ -305,8 +317,6 @@ In [17] a painting game was also developed during the data collection process, w
 The networks are configured to output both the elevation and azimuth angle. This obviously has the benefit of these error signals being able to propagate back through the network separately. As in [17] we analyse the error of each of these angles separately in order to understand the performance of the models. It was typical in [1]'s experiments that certain examples would perform well in one angle but be unable to gain accuracy in the other angle.\\
 
 In order to compare results with [17], both error metrics are adopted. Mean average error (of azimuth and elevation angles) and combined mean average error (MAE and CMAE hereafter).
-
-Add figure of azimuth and elevation. + taking mean implicit
 
 \subsubsection{Software Configuration}
 All models were built using Keras, which is a high level API for constructing neural networks. It uses other frameworks for backends. For this work TensorFlow was selected as this is support on Google Cloud ML Engine. \\
@@ -380,7 +390,7 @@ Although the dataset was fairly small, it is completely justified not to increas
 
 Structural changes were not as strictly defined and developed during the experimental process. It is much harder to define and strict set of structural modifications to explore of three different models. It is also not necessarily better for obtaining optimal results and I opt to let structural changes to be chosen on a discretionary basis on a per model basis. I accept this as a deficiency but it is not possible to explore all structural possibilities. The structural changes experimented with largely revolved around the number of convolutional and pooling layers. \\
 
-Other flexible, non-structural modifications were made during experiments which involved differing normalisation ranges for the pixel values (0-1, -1-1) along with differing intialization strategies. All of these subsequent experiments were performed optimizing over the hyperparameter space defined above in figure y. The overall multiresolution structure, including the resolution of the images, was not changed during the process. \\
+Other flexible, non-structural modifications were made during experiments which involved differing normalisation ranges for the pixel values (0-1, -1-1) along with differing intialization strategies. All of these subsequent experiments were performed optimizing over the hyperparameter space defined above in table \ref{tab:table1}. The overall multiresolution structure, including the resolution of the images, was not changed during the process. \\
 
 Latency will also be taken into consideration which will be measured by how many seconds are taken to generate predictions on a given number of images from the original dataset. This will be measured using an i5 CPU which acts as a completely sufficient proxy CPU for one which would be present in a modern mobile phone. Latency will be measured just on the best performing models, in terms of accuracy, and primarily serve as a tool to potentially dismiss the best performing model in favour of a smaller one with similar accuracy. \\
 
@@ -441,7 +451,7 @@ These primarily negative outputs were shown in most other convolutional layers f
 
 There is a clear divergent, negative drift of the dense units' biases, showing there is no major corrective event during the training process. In addition to this, looking at the output from the dense layer for poor model in figure \ref{fig:baddenseout} as compared to the good model, the poor model again shows an extremely negatively scewed distribution compared to the good model. There is also a shock event in the 7th epoch as the weights collapse to extremely negative value.\\
 
-It is difficult to pinpoint the exact reason for this and why other models were resilient to this shock event. It is possibily an over reaction as other filters are unable to pick up on features and there was perhaps some conversion artefacts that caused this, but this is merely speculation. \\
+It is difficult to pinpoint the exact reason for this and why other models were resilient to this shock event. It is possibly an over reaction as other filters are unable to pick up on features and there was perhaps some conversion artefacts that caused this, but this is merely speculation. \\
 
 Add what we learn from this and how this is likely cause, and tblogs were not gathered for other models during training
 
@@ -594,6 +604,7 @@ Chicago
 Chicago
 \item Kingma, D., \& Ba, J. (2014). Adam: A method for stochastic optimization. \emph{arXiv preprint arXiv:1412.6980}.
 Chicago	
+\item He, K., Zhang, X., Ren, S., \& Sun, J. (2016). Deep residual learning for image recognition. In \emph{Proceedings of the IEEE conference on computer vision and pattern recognition} (pp. 770-778).
 
 
 \end{enumerate}
@@ -653,6 +664,19 @@ has bad epoch
   \caption{Dense layer output value histograms for poorly performing model}
   \label{fig:baddenseout}
 \end{figure}
+
+\begin{figure}[h]
+  \includegraphics[scale=0.8]{actualsqueezemodelhires.pdf}
+  \caption{Multiresolution SqueezeNet architecture}
+  \label{fig:squeezenetgraph}
+\end{figure}
+
+\begin{figure}[h]
+  \includegraphics[scale=0.8]{mobilemodelhires.pdf}
+  \caption{Multiresolution MobileNet architecture}
+  \label{fig:mobilenetgraph}
+\end{figure}
+
 
 
 \end{document}
