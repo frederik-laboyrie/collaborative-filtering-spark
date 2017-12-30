@@ -420,8 +420,8 @@ Squeeze ratio and percentage 3x3 just affect the number of 3x3 and 1x1 filters w
     \begin{tabular}{l|l|l|l}
       \textbf{} & \textbf{Vanilla} &                          \textbf{SqueezeNet} & \textbf{MobileNet}\\
       \hline
-      Elevation Angle Error & 10.52$^{\circ}$ & 13.94$^{\circ}$ & 10.63\\
-      Azimuth Angle Error & 10.56$^{\circ}$  & 9.78$^{\circ}$ & 11.13\\
+      Elevation Angle Error & 10.52$^{\circ}$ & 13.94$^{\circ}$ & 10.63$^{\circ}\\
+      Azimuth Angle Error & 10.56$^{\circ}$  & 9.78$^{\circ}$ & 11.13$^{\circ}\\
 
     \end{tabular}
   \end{center}
@@ -447,39 +447,39 @@ Squeeze ratio and percentage 3x3 just affect the number of 3x3 and 1x1 filters w
   \end{center}
 \end{table}
 
-Performance was inferior to results gained in Asad (2017). However, the efficient models were able to achieve similar performance to the standard CNN. The better performing efficient models also tended to be larger structurally. For example, the best performing SqueezeNets would typically have 4 Fire modules for each resolution compared to the Vanilla networks 2 convolutional layers.\\
+Performance was inferior to results gained in Asad (2017) [add results here]. However, the efficient models were able to achieve similar performance to the standard CNN. The better performing efficient models also tended to be larger structurally. For example, the best performing SqueezeNets would typically have 4 Fire modules for each resolution compared to the Vanilla networks 2 convolutional layers.\\
 
-Training loss did not fully converge for MobileNets (figure \ref{fig:mobileloss}) and SqueezeNets (figure \ref{fig:squeezeloss} compared to the standard CNN (figure fig:loss). Note that the SqueezeNet has higher loss as the labels are over a larger range. Although the standard CNN had far more parameters, it is difficult to give an explanation beyond intuition or speculation without studying speed of convergence over several examples for each model. \\
+Training loss did not fully converge for MobileNets (figure \ref{fig:mobileloss}) and SqueezeNets (figure \ref{fig:squeezeloss}) compared to the standard CNN (figure \ref{fig:loss}). Note that the SqueezeNet has higher loss as the labels are over a larger range. Although the standard CNN had far more parameters, it is difficult to attribute the speed of convergence to this characteristic. Only the best models' speed of convergence were analysed and it is not possible to give an explanation beyond intuition or speculation without studying several examples for each model type. \\
 
-Both SqueezeNets and MobileNets had not fully converged in terms of training loss when training stopped, but I would refrain from saying test accuracy would have continued to fall had training continued. It would be possible to come to such conclusions with a more expensive training process. However, due to the training test split of 80:20, the test accuracy variance was quite high between epochs and it can be definitively said whether test accuracy would have continued to fall.\\
+Both SqueezeNets and MobileNets had not fully converged in terms of training loss when training stopped (figures \ref{fig:squeezeloss} and \ref{fig:mobileloss} respectively), but I would refrain from saying test accuracy would have continued to fall had training continued. It would be possible to come to such conclusions with a more expensive training process where range of hyperparameters would have had to have been sacrificed for more epochs. Further, due to the training test split of 80:20, the test accuracy variance was quite high between epochs and it can be definitively said whether test accuracy would have continued to fall with more training.\\
 
 In table \ref{tab:params}, it is shown that the similarities in the best performing models were in the fairly small number of neurons in the fully-connected layers along with a large number of filters. Further, all use Xavier as the intialisation method, which was not expected given the usage of ReLUs.\\
 
-However, it is not indicative of this particular training process overall to focus on specific configurations as many similarly configured models would become constant predictors during training. In fact, differing ways of processing the data or configuring the network led significantly worse results than the general frameworks which allowed the acceptable results as shown above. For example, mean standard deviation normalisation of the pixel values caused significant drops in performance and the reasons for which are unclear as all normalisation was performed on a global basis, not batchwise, in order to stabilise the process. \\
+However, it is not indicative of this particular training process overall to focus on specific configurations as many similarly configured models would become constant predictors during training. In fact, differing ways of processing the data or configuring the network led to significantly worse results than the configurations which allowed the acceptable results as shown above. For example, mean standard deviation normalisation of the pixel values caused significant drops in performance and the reasons for which are unclear as all normalisation was performed on a global basis, not batchwise, in order to stabilise the process. \\
 
 The stochastic optimization process in ADAM, was insufficient in itself to prevent many configurations getting stuck early on in training, in terms of accuracy. This was even in conjunction with using very leaky ReLUs to avoid negative input being culled early in the network and to allow as much loss information to flow through the network during training.\\
 
-It was troublesome for the Bayesian optimization process that many configurations got stuck or became constant predictors as it is harder to build a distribution of how hyperparameters and accuracy interact. Poorer models tended to become constant predictors and in this way their is little information to differentiate between them. \\
+It was troublesome for the Bayesian optimization process that many configurations got stuck or became constant predictors as it is harder to build a distribution of how hyperparameters and accuracy interact. Poorer models tended to have very similar performance and in this way their is little information to differentiate between them. \\
 
-Attempts to increase accuracy by using more global features maps failed. This was done by utilising pooling operations. It is possible that using lower resolution images instead of pooling could have increased accuracy but this is of course largely speculation. \\
+Attempts to use pooling on the low resolution branch to gain more global feature maps failed as accuracy did not improve. It is possible that using lower resolution images instead of pooling could have increased accuracy but this would require further experimentation. \\
 
 
 \subsection{In Depth Analysis of Training Process}
-It was often the case that models with similar parameters would show wildly different properties in terms of loss. This is demonstrated in this section by looking at the training of two Vanilla CNNs. One showed strong convergent properties and the other divergent properties as shown in figure \ref{fig:loss}. The well performing model has the parameters as in table \ref{tab:params} and the poor model's configuration was similar to the extent that it is irrelevant to compare parameters. Note that the poor model's loss never approaches the loss that the good model is capable of achieving even after the first epoch.\\
+It was often the case that models with similar parameters would show wildly different properties in terms of loss. This is demonstrated in this section by looking at the training of two Vanilla CNNs. One showed strong convergent properties and the other divergent properties as shown in figure \ref{fig:loss}. The well performing model has the parameters as in table \ref{tab:params} and the poor model's configuration was similar to the extent that it is detracts from this exercise to compare parameters. Note that the poor model's loss never approaches the loss that the good model is capable of achieving even after the first epoch.\\
 
-Looking at the histogram distribution of kernel and bias parameters in conv2d\_1 which is the first full resolution layer as seen in figure \ref{fig:multiinput}. The good model's parameters in figure \ref{fig:goodearlyweights} are in fact fairly similar to those in the bad model as shown in \ref{fig:badearlyout} as they are both fairly evenly distributed around 0. \\
+Looking at the histogram distribution of kernel and bias parameters in conv2d\_1, which is the first full resolution layer as seen in figure \ref{fig:multiinput},  the good model's parameters in figure \ref{fig:goodearlyweights} are in fact fairly similar to those in the bad model as shown in \ref{fig:badearlyout} as they are both fairly evenly distributed around 0. However, when looking at the outputs from these layers as shown for the good model in figure \ref{fig:goodearlyout} and the poor model in figure \ref{fig:badearlyout} there is a clear difference. The poor model's outputs get stuck below 0 whereas the good model's outputs remain distributed around 0. \\
 
-However, when looking at the outputs from these layers as shown for the good model in figure \ref{fig:goodearlyout} and the poor model in figure \ref{fig:badearlyout} there is a clear difference. The poor model's outputs get stuck below 0 whereas the good model's outputs remain distributed around 0. My choice of activation function being LeakyReLU in part was to prevent situations like this, and in fact the LeakyReLUs were parametrised to be especially leaky with $\alpha$ being 0.1, meaning negative values are not culled completely and allowed to flow. This is also true of the selection of ADAM as an adapative learning rate to help the model escape such traps during training.\\
+My choice of activation function being LeakyReLU in part was to prevent situations like this, and in fact the LeakyReLUs were parametrised to be especially leaky with $\alpha$ being 0.1, meaning negative values are not culled completely and allowed to flow. This is also true of the selection of ADAM as an adapative learning rate to help the model escape such traps during training.\\
 
-Although literature suggests the He initialisation is more theoretically sound for ReLUs, Xavier initialisation was strictly better performing for this better task. Although, the results would suggest otherwise, my initialisation strategy may be in part to blame for these divergent properties. It is difficult to do much more than speculate however given that Xavier outperformed He overall in this task. \\
+Although the results would suggest otherwise, where Xavier outperformed He intialisation, the initialisation strategy may be in part to blame for these divergent properties. The Xavier initialisation may have interacted poorly with ReLUs, as literature had suggested, in the poor model's case but not in the good model's case. But again, it is difficult to do much more than speculate given that Xavier outperformed He overall in this task. \\
 
 These primarily negative outputs were shown in most other convolutional layers for the poor performing model. Looking at the implications this has for the dense, fully-connected layers later on in the network it is possible to gain further insight into the training process. These are showing in figures \ref{fig:gooddenseout} and \ref{fig:baddenseout} for the good and poor model respectively. \\
 
 There is a clear divergent, negative drift of the dense units' biases, showing there is no major corrective event during the training process. In addition to this, looking at the output from the dense layer for poor model in figure \ref{fig:baddenseout} as compared to the good model, the poor model again shows an extremely negatively scewed distribution compared to the good model. There is also a shock event in the 7th epoch as the weights collapse to extremely negative value.\\
 
-It is difficult to pinpoint the exact reason for this and why other models were resilient to this shock event. It is possibly an over reaction as other filters are unable to pick up on features and there was perhaps some conversion artefacts that caused this, but this is merely speculation. \\
+It is difficult to pinpoint the exact reason for this and why other models were resilient to this shock event. It is possibly an over reaction as other filters are unable to pick up on features and there were perhaps some conversion artefacts that caused this.\\
 
-Add what we learn from this and how this is likely cause, and tblogs were not gathered for other models during training
+Overall, analysing these visualisations clearly show that training stuck due to weights being stuck early on in negative values. Going forward, it would be an obvious to check for this as an early stopping condition. This would make training cheaper and make it possible to explore more hyperparameter space.
 
 \subsection{Analysis of Successful and Unsuccessful Examples}
 \begin{table}[h!]
@@ -544,18 +544,18 @@ Add what we learn from this and how this is likely cause, and tblogs were not ga
 
 
 
-In this section, I do not analyse the results of the unsuccessful models as detailed in section 5.2 as these models resulted in a constant predictor and so analysing any distribution of angles related to the errors is meaningless as it would only reflect the distribution of the dataset in relation to the constant value. However, I do split the examples into those which were classified successfully, that is below 5 $^{\circ}$, and unsuccessful, that is above 15$^{\circ}$. \\
+In this section, I do not analyse the results of the unsuccessful models as detailed in section 4.2 as these models resulted in a constant predictor and so analysing any distribution of angles related to the errors is meaningless as it would only reflect the distribution of the dataset in relation to the constant value. However, I do split the examples into those which were classified successfully, that is below 5 $^{\circ}$, and unsuccessful, that is above 15$^{\circ}$. So note that the angles in tables 4, 5 and 6 represent the distribution of the actual label angles that fall into these categories and do not represent absolute error in themselves.\\
 
-Looking at table \ref{tab:tablebreakdown} there are several expected, and generic, observations worth highlighting. First, the mean absolute azimuth angle is generally larger for the unsuccessfully predicted examples. The std of these angles is similar to those of the successful examples showing again the set generally shows larger azimuth angles. 
+Looking at tables 4, 5 and 6 \ref{tab:tablebreakdown} there are several expected, and generic, observations worth highlighting. First, the mean absolute azimuth angle is generally larger for the unsuccessfully predicted examples. This clearly shows, understandably, the models had difficulty evaluating examples the further their orientation was from being square to the lense. The std of these angles is similar to those of the successful examples showing again the set generally shows larger azimuth angles. 
 This is unsurprisingly shown to a stronger degree by those in the unsuccessful azimuth set. \\
 
-Looking at examples in figure \ref{fig:badz} it becomes obvious why such examples are challenging to predict without depth information. These are those where there is little azimuth rotation to leaving less information for the model to infer about elevation except distortion of the general hand shape. \\
+Looking at examples in figure \ref{fig:badz} it becomes obvious why such examples are challenging to predict without depth information. These are those where there is little azimuth rotation to leaving less information for the model to infer about elevation except distortion of the general hand shape. Even to the human eye these examples are difficult to evaluate, having to use finger length and shade to infer the orientation which is not immediately obvious.  \\
 
 
 \subsection{Speed Checks}
-In this section I do not perform a general comparison of latency against performance. These general comparisons are available in SqueezeNets' (Iandola et al., 2016) and MobileNets' (Howard et al., 2017) original papers. Further to this, my training results were very unstable as shown in Section 4.2 and so would not give a meaningful comparison of latency and performance, as I am not giving up latency for performance as some larger models performed significantly worse than smaller models. \\
+In this section, I do not perform a general comparison of latency against performance. These general comparisons are available in SqueezeNets' (Iandola et al., 2016) and MobileNets' (Howard et al., 2017) original papers. Further to this, my training results were very unstable as shown in Section 4.2 and so would not give a meaningful comparison of latency and performance, as I am not giving up latency for performance as some larger models performed significantly worse than smaller models. \\
 
-This section rather aims to show the suitability of the best performing models for real-time application. In this way, this section aims to confirm my generic preference for smaller models during the training process and whether it has resulted in fast enough models, capable of serving predictions at a smooth frame rate (30 FPS).\\
+This section rather aims to show the suitability of the best performing models for real-time application. In this way, this section aims to confirm the previously chosen hyperparameter ranges and structural decisions were capable of serving predictions at a smooth frame rate (30 FPS).\\
 
 \begin{table}[h!]
   \begin{center}
@@ -571,8 +571,7 @@ This section rather aims to show the suitability of the best performing models f
   \end{center}
 \end{table}
 
-Table \ref{tab:speed} shows that all the models are more than capable of serving predictions in real-time. However, due to the models being multiresolution the prediction serving has other processes besides producing output from the three different resolution images. The raw input from the camera first has to be resized to the three resolutions, converted to grayscale and the pixel values to be scaled between 0 and 1 which is a significant process in itself.
-
+Table \ref{tab:speed} shows that all the models are more than capable of serving predictions in real-time. However, other processes not present in the training pipeline would have to be completed in order to serve predictions from raw camera input. These would of course be converting to grayscale and resampling to three new resolutions. There is a significant amount of leeway before speed would drop to 30 examples predicted per second so it is likely these models, especially the vanilla CNN and SqueezeNet, could be integrated into an application.
 
 \section{Discussion}
 All three architectures were implemented successfully and gained accurate results with models capable of serving predictions in real-time. In this sense, the project was a success but given the fact that the results were inferior to those in Asad (2017) it allows reflection on what else would have been valuable to do and where performance gains could be gained. \\
