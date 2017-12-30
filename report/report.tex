@@ -257,9 +257,9 @@ MobileNets, like SqueezeNets, are fundamentally different to Vanilla CNNs due to
   \label{fig:dwconvolution}
 \end{figure}
 
-For instance, a 2-dimensional kernel which can be expressed as an outer product of 2 vectors, one in the x direction and one in the y direction, would be a separable kernel. It is equivalent to perform convolutions using these 2 1-dimensional vectors and then combine their outputs using 1x1 pointwise convolutions. This technique scales to multi-dimensions, for instance when there are multiple feature maps deriving from different kernels. The efficiency gains in parameters are quadratic in that if you have \emph{d} dimensions and kernels which are \emph{w} units wide, the cost of convolution operation would be \emph{O($W^d$)} for separable convolution and \emph{O(W * d)} for standard convolutions. Goodfellow et al. (2016) \\
+For instance, a 2-dimensional kernel which can be expressed as an outer product of two vectors, one in the x direction and one in the y direction, would be a separable kernel. It is equivalent to perform convolutions using these 2 1-dimensional vectors and then combine their outputs using 1x1 pointwise convolutions. This technique scales to multi-dimensions, for instance when there are multiple feature maps deriving from different kernels. The efficiency gains in parameters are quadratic in that if you have \emph{d} dimensions and kernels which are \emph{w} units wide, the cost of convolution operation would be \emph{O($W^d$)} for separable convolution and \emph{O(W * d)} for standard convolutions. Goodfellow et al. (2016) \\
 
-A diagrammatic representation of a depthwise separable convolution is shown in figure \ref{fig:dwconvolution}. A standard convolution on the left hand side is applied to every input channel hence its depth. This is equivalent to convolving depthwise first and then multiplying these by 1x1 pointwise convolutions which allow the parameters to be applied to each input channel, or depth. An example depthwise separable convolution layer will contain multiple depthwise and pointwise convolutions and is shown diagrammatically in figure \ref{fig:dwconvolutionlayer}.\\
+A diagrammatic representation of a depthwise separable convolution is shown in figure \ref{fig:dwconvolution}. A standard convolution on the left hand side is applied to every input channel, hence the depth of the resulting feature map. This is equivalent to convolving depthwise first and then multiplying these by 1x1 pointwise convolutions which allow the parameters to be applied to each input channel, or depth. An example depthwise separable convolution layer will contain multiple depthwise and pointwise convolutions and is shown diagrammatically in figure \ref{fig:dwconvolutionlayer}.\\
 
 \begin{figure}[h]
   \includegraphics[width=\linewidth]{dwlayer.pdf}
@@ -268,7 +268,7 @@ A diagrammatic representation of a depthwise separable convolution is shown in f
 \end{figure}
 
 
-This has the advantage of having 8-9x fewer parameters as in a standard convolution, the spatial height and width of the filter, the number of input channels, the number of output channels and the feature map sizes all compound multiplicitavely into a very large number of parameters. As in [x] if we let \emph{$D_{F}$} and \emph{$D_{K}$} represent the height or widths of a feature map and kernel height respectively, and further let \emph{M} represent the number of input channels and \emph{N} the number of output channels, then the number of parameters in standard convolution can be expressed as: \[\emph{$D_{F}$} \cdot \emph{$D_{F}$} \cdot M x N \cdot \emph{$D_{K}$} \cdot \emph{$D_{K}$} + M x \cdot N x \] Whereas if the convolution is separated into its depthwise and pointwise components then the cost is: \[\emph{$D_{F}$} \cdot \emph{$D_{F}$} \cdot M \cdot \emph{$D_{K}$} \cdot \emph{$D_{F}$} \cdot \emph{$D_{F}$} \cdot \emph{$D_{F}$}\]\\
+This has the advantage of having 8-9x fewer parameters as in a standard convolution, the spatial height and width of the filter, the number of input channels, the number of output channels and the feature map sizes all compound multiplicitavely into a very large number of parameters. As in Howard et al. (2017) if we let \emph{$D_{F}$} and \emph{$D_{K}$} represent the height or widths of a feature map and kernel height respectively, and further let \emph{M} represent the number of input channels and \emph{N} the number of output channels, then the number of parameters in standard convolution can be expressed as: \[\emph{$D_{F}$} \cdot \emph{$D_{F}$} \cdot M x N \cdot \emph{$D_{K}$} \cdot \emph{$D_{K}$} + M x \cdot N x \] Whereas if the convolution is separated into its depthwise and pointwise components then the cost is: \[\emph{$D_{F}$} \cdot \emph{$D_{F}$} \cdot M \cdot \emph{$D_{K}$} \cdot \emph{$D_{F}$} \cdot \emph{$D_{F}$} \cdot \emph{$D_{F}$}\]\\
 
 It is important to note at this point that it is not of major use to purely put emphasis on number of parameters when measuring the efficiency of a model. This is because number of mult-adds does not necessarily scale uniformly with latency. On a per-module basis, that is number of parameters in a Fire module for example, number of parameters would of course scale fairly uniformly with latency. However, over an entire model for example, the number of mult-adds can be reduced using pruning. This creates a sparse model with bottlenecks and the latency of the model will not reduce at the same rate as number of mult-adds. Howard et al. (2017) \\
 
@@ -301,7 +301,7 @@ Adam (Kingma and Ba, 2014) will be used as the optimization algorithm. Adam is g
 These moving averages vectors are initialised as zeros which make this method particularly well-suited to problems with many parameters and sparse interactions, which is typically the case for computer vision applications. Further, it is particularly the case for this specific task where large areas of the background are irrelevant to the modeling process. As Adam is adapative its initial conditions generally requires very little or even no tuning.
 \subsection{Training Configuration}
 \subsubsection{Dataset}
-The dataset used is the same which is collected by Asad in Asad (2017). The dataset consists of 9717 RGB images of 13 different participants hands against a plain background. Ground truth orientation is inferred by simultaneously capturing depth images of the participants' hands using a Kinect sensor. The plane that implicitly sits across the 3D point cloud is calculated using the RANSAC algorithm on these coordinates. From this plane equation the normal vector can be calculated as the transpose of the x, y and z components of the plane equation. These inverse cosine of these x and y components are used to calculate the azimuth and elevation angles which provide the ground truth labels for training. Formally, as shown in Howard et al. (2017), this is:
+The dataset used is the same which is collected by Asad in Asad (2017). The dataset consists of 9717 RGB images of 13 different participants hands against a plain background. Ground truth orientation is inferred by simultaneously capturing depth images of the participants' hands using a Kinect sensor. The plane that implicitly sits across the 3D point cloud is calculated using the RANSAC algorithm on these coordinates. From this plane equation (\emph{$n_{0}$) the normal vector (\emph{$N$}) can be calculated as the transpose of the x, y and z components of the plane equation. These inverse cosine of these x and y components are used to calculate the azimuth (\emph{$\Phi_{k}$}) and elevation (\emph{$\Psi_{k}$}) angles which provide the ground truth labels for training. Formally, as shown in Asad (2017), this is:
 
 \[\emph{$n_{0}$} =  \emph{$xn_{x}$} + \emph{$yn_{y}$} + \emph{$zn_{z}$}\]
 
@@ -311,50 +311,49 @@ The dataset used is the same which is collected by Asad in Asad (2017). The data
 
 \[\emph{$\Psi_{k}$} =  \emph{$cos^{-1}n_{y}$}\]
 
-RANSAC is well suited to this task as it takes a random sample of points in each iteration making it more resilient to outliers. Outliers in this case could be of particularly large effect as the hand takes up a fairly small proportion of the image. This means small errors can be amplified into larger ones causing inaccuracies in the labels and creating difficulties in the training process where very similar images have vastly different labels.Asad (2017)\\
+RANSAC is well suited to this task as it takes a random sample of points in each iteration, making it more resilient to outliers. Outliers in this case could be of particularly large effect as the hand takes up a fairly small proportion of the image. This means small errors can be amplified into larger ones causing inaccuracies in the labels and creating difficulties in the training process where very similar images have vastly different labels. Asad (2017)\\
 
-In Asad (2017) a painting game was also developed during the data collection process, where a user is given feedback showing how much of the orientation space they have managed to fill with sufficient samples. This was in response to earlier datasets which had inconsistencies and gaps in orientation space as users failed to provide sufficient examples for the entirety of orientation space. This then provides a consistent and balanced dataset already from the collection phase and does not require and post-processing to balance the dataset.
+In Asad (2017) a painting game was also developed during the data collection process, where a user is given feedback showing how much of the orientation space they have managed to fill with sufficient samples. This was in response to earlier datasets which had inconsistencies and gaps in orientation space as users failed to provide sufficient examples for the entirety of orientation space. This then provides a consistent and balanced dataset already from the collection phase and does not require any post-processing to balance the dataset.
 
 \subsubsection{Error Metric}
-The networks are configured to output both the elevation and azimuth angle. This obviously has the benefit of these error signals being able to propagate back through the network separately. As in Asad (2017) we analyse the error of each of these angles separately in order to understand the performance of the models. It was typical in Howard et al. (2017)'s experiments that certain examples would perform well in one angle but be unable to gain accuracy in the other angle.\\
+The networks are configured to output both the elevation and azimuth angle. This obviously has the benefit of these error signals being able to propagate back through the network separately. As in Asad (2017), I analyse the error of each of these angles separately in order to understand the performance of the models. It was typical in Asad's (2017) experiments that certain examples would perform well in one angle but be unable to gain accuracy in the other angle.\\
 
 In order to compare results with Asad (2017), both error metrics are adopted. Mean average error (of azimuth and elevation angles) and combined mean average error (MAE and CMAE hereafter).
 
 \subsubsection{Software Configuration}
-All models were built using Keras, which is a high level API for constructing neural networks. It uses other frameworks for backends. For this work TensorFlow was selected as this is support on Google Cloud ML Engine. \\
+All models were built using Keras, which is a high level API for constructing neural networks. It uses other frameworks for backends. For this work, TensorFlow was selected as it is natively supported on Google Cloud ML Engine, allowing the best range of features for Keras. \\
 
 Standard convolutional layers and fully-connected, or dense, layers are obviously supported in the base library. The components which make up SqueezeNets and MobileNets are not part of the base library and had to be implemented separately. \\ 
 
-MobileNets in their original implementation are available to import as  a model in Keras, but this provides no flexibility in altering structure and would not support a multiresolution architecture. To achieve this, an adaption of the base separable convolution class in Keras can be used to construct a depthwise separable convolutional layer [Malli]. This layer can then be used to build custom depthwise convolutional blocks which can be used modularly as if they were standard layers and there is no strict confinement to the base MobileNet structure. \\
+MobileNets in their original implementation are available to import as  a model in Keras, but this provides no flexibility in altering structure and would not support a multiresolution architecture. To achieve this, an adaption of the base separable convolution class in Keras can be used to construct a depthwise separable convolutional layer (Can Malli, 2017). This layer can then be used to build custom depthwise convolutional blocks which can be used modularly as if they were standard layers and there is no strict confinement to the base MobileNet structure. \\
 
-A similar approach was taken to implement SqueezeNets. The base building blocks, in this case Fire modules, were implemented separately allowing complete control over the structure of the network. Using [Malli] as a base for the modules, I modified them to adapt to all of the hyperparameters mentioned in the original paper Iandola et al. (2016), and modified the model construction to both be suitable for regression and multiresolution architectures. \\
+A similar approach was taken to implement SqueezeNets. The base building blocks, in this case Fire modules, were implemented separately allowing complete control over the structure of the network. Using Can Malli (2016) as a base for the modules, I modified them to adapt to all of the hyperparameters mentioned in the original paper, and modified the model construction to both be suitable for regression and multiresolution architectures. \\
 
 Testing was done by ensuring pixel values and label values were within a strict range at all parts of the pipeline. Network configuration was tested visually using TensorBoard. This shows the exact shape of the graph along with histograms of the weights during training. This  allows confirmation that the network architecture is correct in addition to whether any of the modules are behaving problematically, as the distribution of the weights may be abnormal.
 
 \subsubsection{Training Pipeline Configuration}
 To streamline the training pipeline all image resizing and grayscaling was performed locally beforehand and the various resolutions were then kept on cloud storage so the correct image formats could be served directly to the models during training. This had to be performed in batches to avoid generating a graph of over TensorFlow's 2GB limit, as the resizing was done using TensorFlow's preprocessing module. \\
 
-This leaves only an input generator, which simultaneously performs samplewise standard deviation normalisation, along with the actual training of the model in the pipeline.
-The input generator is vital for memory management, as without controlling the input generator's batch size to be sufficiently small, the GPU can run out of memory and the training process is killed. In fact, the entire training process was extremely sensitive and it was necessary to decrease what was a stable batch size just to accommodate slightly larger models or models which did not use pooling. \\
+This means for a given experiment, input images only need to pass through an input generator, after basic pixel and label standardisation. The input generator is vital for memory management, as without controlling the input generator's batch size to be sufficiently small, the GPU can run out of memory and the training process is killed.\\
 
 The training pipeline was configured in such a way that ranges of hyperparameters are provided automatically by a hyperparameter configuration file where the ranges are specified. Then multiple parallel trials could take place on cloud. Results of these parallel trials are used in the Bayesian hyperparameter optimisation to choose which value within the range to explore most over a maximum number of trials that is specified. \\
 
 The same hyperparameter optimisation strategy was used for a variety of structural experiments. That is the hyperparameters and structure were not optimized simultaneously but rather in multiple parallel trials. Some structures provided extremely poor, even divergent, solutions and it was much easier to understand what structural characteristics were causing this by separating structure optimization from hyperparameter optimization.\\
 
-A particular good example of this is that due to the small batch size required to manage memory, regularization techniques such as layer-wise batch normalization were very unstable as the normalization was being performed on feature maps of very few samples (8 or fewer). In fact, some hyperparameters showed extreme variance in test error, showing errors between 5 degrees to 50 degrees just by randomizing the order in wich the images were passed into the model. \\
+A particular good example of this is that due to the small batch size required to manage memory, regularization techniques such as layer-wise batch normalization were very unstable as the normalization was being performed on feature maps of very few samples (8 or fewer). \\
 
-By removing layer-wise batch normalization the model showed strong stability and low test error variance over a variety of hyperparameters and is discussed more in depth in results.  But it is still worth highlighting how the training pipeline configuration influenced the structure of the model. \\
+By removing layer-wise batch normalization, the model showed strong stability and low test error variance over a variety of hyperparameters and is discussed more in depth in results.  But it is still worth highlighting how the training pipeline configuration influenced the structure of the model. \\
 
 
 \subsubsection{Optimization Strategy}
 
-Hyperparameter tuning will be performed using Google Cloud ML Engine's implementation of Bayesian optimization on a fixed range of parameters. Bayesian optimization is an alternative to a naive grid search which allows a more efficient exploration of hyper parameter space. Naive grid search wastes a great amount of computation on calculating performance in area of parameter space which is unlikely to yield optimal results.\\
+Hyperparameter tuning will be performed using Google Cloud ML Engine's implementation of Bayesian optimization on a fixed range of parameters. Bayesian optimization is an alternative to a naive grid search which allows a more efficient exploration of hyperparameter space. Naive grid search wastes a great amount of computation on calculating performance in area of parameter space which is unlikely to yield optimal results.\\
 
-Bayesian optimization works by modelling the function we are interested in optimizing not only using local gradient information but also all past evaluations of the function. In this way, the Bayesian framework makes a probabilistic evaluation of the function during training and chooses hyperparameters than have the highest probability of improving the model's performance.\\
+Bayesian optimization works by modelling the function of interest, optimizing not only using local gradient information but also all past evaluations of the function. In this way, the Bayesian framework makes a probabilistic evaluation of the function during training and chooses hyperparameters than have the highest probability of improving the model's performance.\\
 
- There are drawbacks to Bayesian optimization in that the covariance functions which controls the distribution of functions that are evaluated itself has to parametrised and there is little to no theoretical grounding in how to do this. Nevertheless, in Snoek et al. (2012) in which the framework is proposed state-of-the-art was surpassed by 3\% with significantly less training time than previous approaches. As the training process in this work will be costly, Bayesian optimization will allow a larger hyperparemter space to be explored and is configured in Google Cloud ML to still be able to take advantage of parallel computing which is cited in Snoek et al. (2012) as a consideration on whether the technique is able to gain significant efficiencies as compared to naive grid search. \\
+ There are drawbacks to Bayesian optimization in that the covariance functions which controls the distribution of functions that are evaluated itself has to be parametrised and there is little to no theoretical grounding in how to do this. Nevertheless, in Snoek et al. (2012) in which the framework is proposed, state-of-the-art benchmarks were surpassed by 3\% with significantly less training time than previous approaches. As the training process in this work will be costly, Bayesian optimization will allow a larger hyperparameter space to be explored and is configured in Google Cloud ML to still be able to take advantage of parallel computing which is cited in Snoek et al. (2012) as a consideration on whether the technique is able to gain significant efficiencies as compared to naive grid search. \\
  
- With such measures being taken to efficiently explore hyperparameter space, it is an an obvious choice to use a standard train-validation-test split will be used to measure performance. K-fold cross validation was deemed too costly.\\
+ With such measures being taken to explore hyperparameter space efficiently, it is an an obvious choice to use a standard train-test split to evaluate models. Utilising cross validation would eliminate any efficiency gained in this manner. \\
 
 
 
@@ -364,9 +363,9 @@ Bayesian optimization works by modelling the function we are interested in optim
 \subsubsection{Evaluation Technique}
 The methodology used in this work was to choose a suitable range for a number of hyperparameters that were applicable to each model. For instance, SqueezeNets have several hyperparameters that do not apply to standard CNNs, so it is not possible to have a consistent set of hyperparameters that are optimized over all  models. \\
 
-Each unique set of hyperparameter ranges is then applied separately to several different structures for each model. For example, for the vanilla CNN suitable ranges for kernel size, number of filters, number of neurons in the fully-connected layers and dropout were chosen. This hyperparameter set was then used to calculate performance for structural choices such as how many layers were used in the convolutional parts of the network or whether to include pooling layers. \\
+Each unique set of hyperparameter ranges is then applied separately to several different structures for each model. For example, for the vanilla CNN suitable ranges for kernel size, number of filters, number of neurons in the fully-connected layers and dropout were chosen. This hyperparameter set was then used to calculate performance for differing structures, such as how many layers were used in the convolutional parts of the network or whether to include pooling layers. \\
 
-A maximum number of trials was set at 32 for each structural choice and then the Bayesian hyperparameter optimisation framework would select the appropriate hyperparameters to calculate performance for in order to optimise accuracy. \\
+Each structural choice would be allocated 32 trials in the Bayesian optimization framework. The framework would then select appropriate hyperparameters to optimise accuracy. \\
 
 As cross-validation is not used, but rather a simple train-test split, in order to estimate generalization error the average error for the top 16 performing network hyperparameter configurations is used to define the accuracy for a given structure. This of course has the advantage of seeing how stable a model is over hyperparameter space at the loss of seeing how stable a model is on being trained on different subsets of the data.\\
 
@@ -396,20 +395,20 @@ Other flexible, non-structural modifications were made during experiments which 
 
 Latency will also be taken into consideration which will be measured by how many seconds are taken to generate predictions on a given number of images from the original dataset. This will be measured using an i5 CPU which acts as a completely sufficient proxy CPU for one which would be present in a modern mobile phone. Latency will be measured just on the best performing models, in terms of accuracy, and primarily serve as a tool to potentially dismiss the best performing model in favour of a smaller one with similar accuracy. \\
 
-As all models trained in this work will be relatively small, a complete study of latency to accuracy will not be undertaken.. The architectures tested also do not vary significantly in number of layers and so latency is largely driven by kernel size for which there is no strict trade off between latency and accuracy. Also, to serve predictions in real time there must be real time preprocessing involving producing differing resolution images for input and converting these to grayscale, which itself is costly. In this way, model latency is only one factor in overall latency for serving predictions. \\
+As all models trained in this work will be relatively small, a complete study of latency to accuracy will not be undertaken. The architectures tested also do not vary significantly in number of layers and so latency is largely driven by kernel size for which there is no strict trade off between latency and accuracy. Also, to serve predictions in real time there must be real time preprocessing involving producing differing resolution images for input and converting these to grayscale, which itself is costly. In this way, model latency is only one factor in overall latency for serving predictions. \\
 
 \subsubsection{Definition of Hyperparameters}
-Kernel size represents the width and height of the convolutional filters used. For the standard CNN this size filter is used for each layer. For MobileNets and SqueezeNets this filter size is only applied to the standard convolutional layers. So all Fire modules and depthwise separable convolutional blocks remain comprised of 3x3 and 1x1 convolutions. \\
+Kernel size represents the width and height of the convolutional filters used. For the standard CNN a filter of this is used for each layer. For MobileNets and SqueezeNets this filter size is only applied to the standard convolutional layers. So all Fire modules and depthwise separable convolutional blocks remain comprised of 3x3 and 1x1 convolutions. \\
 
-The filters hyperparameter is simply the number of filters trained in any layer of any model. There were no restrictions as there were for the kernel size. \\
+The filters hyperparameter is simply the number of filters used in any layer of any model. There were no exceptions as there are for the kernel size. \\
 
-Dropout is the probability of a neuron dropping out in the fully-connected layers of the networks. This regularisation technique was previously described in Section 3.2. \\ 
+Dropout is applied in the fully-connected layers and is as defined in Section 3.2. \\ 
 
 Fully-connected neurons is the number of neurons in the first fully-connected layer. In each model, the second layer always contained half the amount of the first layer. \\
 
 Bottleneck 1x1s represents the number of 1x1 convolutional filters that the final feature map from a SqueezeNet passes through before the fully-connected layers. Passing through fewer filters will cause the feature maps to become more condensed. \\
 
-Squeeze ratio and percentage 3x3 are described in more detail in Section 3.1.2 and just effect the number of 3x3 and 1x1 filters within a Fire module.
+Squeeze ratio and percentage 3x3 just affect the number of 3x3 and 1x1 filters within a Fire module and are as defined in Section 3.1.2.
 
 \section{Results}
 
@@ -677,11 +676,12 @@ Chicago
 
 \end{enumerate}
 
-
-
-
-
-
+\section*{Software References}
+Author Surname, Author Initial. (Year Published). Title. [online] Available at: http://Website URL [Accessed Date Accessed]
+Chollet, Francois. (2015). Keras. [online] Available at: www.keras.io
+Can Malli, Refik. (2017). keras-mobilenet. [online] Available at: https://github.com/rcmalli/keras-mobilenet
+Can Malli, Refik. (2016). keras-squeezenet. [online] Available at: https://github.com/rcmalli/keras-squeezenet
+Google. (2015). TensorFlow. [online] Available at: www.tensorflow.org
 
 
 
