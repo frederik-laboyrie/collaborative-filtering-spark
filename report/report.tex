@@ -5,6 +5,8 @@
 \usepackage{epstopdf}
 \usepackage{listings}
 \usepackage{color}
+\usepackage{lipsum}
+
 
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
@@ -682,8 +684,10 @@ Chicago
 \item Can Malli, Refik. (2016). keras-squeezenet. [online] Available at: https://github.com/rcmalli/keras-squeezenet
 \item Google. (2015). TensorFlow. [online] Available at: www.tensorflow.org
 \end{itemize}
-
+\lipsum
 \pagebreak
+\pagenumbering{arabic}
+\renewcommand*{\thepage}{A\arabic{page}}
 \section{Appendix}
 
 \subsection{Code Samples}
@@ -1147,6 +1151,6 @@ def squeezenet(data, leaky, exclude_top, res, squeeze_param, filters, kernel_siz
   \caption{Multiresolution MobileNet architecture}
   \label{fig:mobilenetgraph}
 \end{figure}
-
+\lipsum
 
 \end{document}
