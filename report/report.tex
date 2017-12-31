@@ -301,7 +301,7 @@ Adam (Kingma and Ba, 2014) will be used as the optimization algorithm. Adam is g
 These moving averages vectors are initialised as zeros which make this method particularly well-suited to problems with many parameters and sparse interactions, which is typically the case for computer vision applications. Further, it is particularly the case for this specific task where large areas of the background are irrelevant to the modeling process. As Adam is adapative its initial conditions generally requires very little or even no tuning.
 \subsection{Training Configuration}
 \subsubsection{Dataset}
-The dataset used is the same which is collected by Asad in Asad (2017). The dataset consists of 9717 RGB images of 13 different participants hands against a plain background. Ground truth orientation is inferred by simultaneously capturing depth images of the participants' hands using a Kinect sensor. The plane that implicitly sits across the 3D point cloud is calculated using the RANSAC algorithm on these coordinates. From this plane equation (\emph{$n_{0}$) the normal vector (\emph{$N$}) can be calculated as the transpose of the x, y and z components of the plane equation. These inverse cosine of these x and y components are used to calculate the azimuth (\emph{$\Phi_{k}$}) and elevation (\emph{$\Psi_{k}$}) angles which provide the ground truth labels for training. Formally, as shown in Asad (2017), this is:
+The dataset used is the same which is collected by Asad in Asad (2017). The dataset consists of 9717 RGB images of 13 different participants hands against a plain background. Ground truth orientation is inferred by simultaneously capturing depth images of the participants' hands using a Kinect sensor. The plane that implicitly sits across the 3D point cloud is calculated using the RANSAC algorithm on these coordinates. From this plane equation (\emph{$n_{0}$}) the normal vector (\emph{N}) can be calculated as the transpose of the x, y and z components of the plane equation. These inverse cosine of these x and y components are used to calculate the azimuth (\emph{$\Phi_{k}$}) and elevation (\emph{$\Psi_{k}$}) angles which provide the ground truth labels for training. Formally, as shown in Asad (2017), this is:
 
 \[\emph{$n_{0}$} =  \emph{$xn_{x}$} + \emph{$yn_{y}$} + \emph{$zn_{z}$}\]
 
@@ -418,10 +418,10 @@ Squeeze ratio and percentage 3x3 just affect the number of 3x3 and 1x1 filters w
     \caption{Results}
     \label{tab:table1}
     \begin{tabular}{l|l|l|l}
-      \textbf{} & \textbf{Vanilla} &                          \textbf{SqueezeNet} & \textbf{MobileNet}\\
+      \textbf{} & \textbf{Vanilla} & \textbf{SqueezeNet} & \textbf{MobileNet}\\
       \hline
-      Elevation Angle Error & 10.52$^{\circ}$ & 13.94$^{\circ}$ & 10.63$^{\circ}\\
-      Azimuth Angle Error & 10.56$^{\circ}$  & 9.78$^{\circ}$ & 11.13$^{\circ}\\
+      Elevation Angle Error & 10.52$^{\circ}$ & 13.94$^{\circ}$ & 10.63$^{\circ}$\\
+      Azimuth Angle Error & 10.56$^{\circ}$  & 9.78$^{\circ}$ & 11.13$^{\circ}$\\
 
     \end{tabular}
   \end{center}
@@ -589,47 +589,8 @@ I do also believe by train test split was too much in favour of training data as
 
 It is then for these given reasons that I believe the methods used in this work could provide better and more robust results in further experiments, given what was learnt during this training process. But more generally, given the large variance in overall performance, other configurations would without doubt be worth trying in order to match performance in Asad (2017) and keep up with new standards for mobile hardware.
 
-1. Howard et al. (2017)
-2. Chollet (2016)
-3. Tompson et al. (2014)
-4. Oseledets (2011)
-5. Novikov et al. (2015)
-6. Xu et al. (2015)
-7. Chen et al. (2015)
-8. Iandola et al. (2016)
-9. He and Sun (2015)
-10. Szegedy et al. (2016) <not used
-11. Han et al. (2015)
-12. Hinton et al. (2015)
-13. Tompson et al. (2014)
-14. Oberweger et al. (2015a)
-15. Oberweger et al. (2015b)
-16. Ge et al. (2016)
-17. Asad (2017)
-18. Keskin et al. (2012)
-19. Sun et al. (2015) < NOT USED?
-20. Guo et al. (2017)
-21. Shrivastava et al. (2016)
-22. Glorot and Bengio (2010)
-23. Kumar (2017)
-24. He et al. (2015)
-25. Wan et al. (2017)
-26. Oikonomidis et al. (2014)
-27. Goodfellow et al. (2016)
-28. Snoek et al. (2012)
-29. Goodfellow et al. (2014)
-30. Antonio et al. (2017)
-31. Joyce (2011)
-32. Deng et al. (2009)
-33. Srivastava et al. (2014)
-34. Szegedy et al. (2015)
-35. Kingma and Ba (2014)
-36. He et al. (2016)
-37. Krizhevsky et al. (2012)
-
-
 \section*{References}
-\begin{enumerate}
+\begin{itemize}
 \item Antoniou, A., Storkey, A., \& Edwards, H. (2017).
  \emph{Data Augmentation Generative Adversarial Networks}. arXiv preprint arXiv:1711.04340.
 Chicago	
@@ -674,15 +635,15 @@ Chicago
 \item Xu, B., Wang, N., Chen, T., \& Li, M. (2015). Empirical evaluation of rectified activations in convolutional network. \emph{arXiv preprint arXiv:1505.00853}.
 
 
-\end{enumerate}
+\end{itemize}
 
 \section*{Software References}
-Author Surname, Author Initial. (Year Published). Title. [online] Available at: http://Website URL [Accessed Date Accessed]
-Chollet, Francois. (2015). Keras. [online] Available at: www.keras.io
-Can Malli, Refik. (2017). keras-mobilenet. [online] Available at: https://github.com/rcmalli/keras-mobilenet
-Can Malli, Refik. (2016). keras-squeezenet. [online] Available at: https://github.com/rcmalli/keras-squeezenet
-Google. (2015). TensorFlow. [online] Available at: www.tensorflow.org
-
+\begin{itemize}
+\item Chollet, Francois. (2015). Keras. [online] Available at: www.keras.io
+\item Can Malli, Refik. (2017). keras-mobilenet. [online] Available at: https://github.com/rcmalli/keras-mobilenet
+\item Can Malli, Refik. (2016). keras-squeezenet. [online] Available at: https://github.com/rcmalli/keras-squeezenet
+\item Google. (2015). TensorFlow. [online] Available at: www.tensorflow.org
+\end{itemize}
 
 \pagebreak
 \section*{Appendix}
