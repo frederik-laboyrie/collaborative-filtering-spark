@@ -54,7 +54,7 @@ good_predictions = good_model.predict([full, med, low])
 bad_predictions = bad_model.predict([full, med, low])
 
 good_angles = (good_predictions * 90) - 45
-bad_angles = (bad_predictions * 90) -45
+bad_angles = (bad_predictions * 90) - 45
 true_angles = labels_to_angles(labels)
 
 good_error = abs(true_angles - good_angles)
